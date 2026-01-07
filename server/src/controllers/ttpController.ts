@@ -69,7 +69,7 @@ export const analyzeTTPs = async (
           { members: { some: { userId, role: { in: ['OWNER', 'EDITOR'] } } } },
         ],
       },
-      include: {
+      select: {
         name: true,
         clientName: true,
         assessmentType: true,
@@ -179,7 +179,7 @@ export const getTTPDetails = async (
 }
 
 export const getTTPMatrix = async (
-  req: AuthRequest,
+  _req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
