@@ -1,0 +1,220 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(USER)
+
+  projects  Project[]
+  findings  Finding[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Project {
+  id             String          @id @default(uuid())
+  name           String
+  clientName     String
+  assessmentType AssessmentType
+  startDate      DateTime
+  endDate        DateTime?
+  status         ProjectStatus   @default(ACTIVE)
+
+  createdBy      String
+  creator        User            @relation(fields: [createdBy], references: [id])
+
+  members        ProjectMember[]
+  findings       Finding[]
+  iocs           IOC[]
+  ttpMappings    TTPMapping[]
+  reports        Report[]
+
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@map("projects")
+}
+
+model ProjectMember {
+  id        String     @id @default(uuid())
+  projectId String
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String
+  role      MemberRole @default(VIEWER)
+
+  createdAt DateTime   @default(now())
+
+  @@unique([projectId, userId])
+  @@map("project_members")
+}
+
+model Finding {
+  id              String        @id @default(uuid())
+  projectId       String
+  project         Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  title           String
+  description     String        @db.Text
+  severity        Severity
+  cvssScore       Float?
+  affectedSystems String[]
+  evidence        String?       @db.Text
+  remediation     String        @db.Text
+  status          FindingStatus @default(NEW)
+
+  assignedTo      String?
+  assignee        User?         @relation(fields: [assignedTo], references: [id])
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([projectId])
+  @@index([severity])
+  @@index([status])
+  @@map("findings")
+}
+
+model IOC {
+  id             String   @id @default(uuid())
+  projectId      String
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  type           IOCType
+  value          String
+  timestamp      DateTime
+  context        String?  @db.Text
+  source         String?
+  enrichmentData Json?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([projectId, timestamp])
+  @@index([type, value])
+  @@map("iocs")
+}
+
+model TTPMapping {
+  id            String   @id @default(uuid())
+  projectId     String
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  iocIds        String[]
+  mitreId       String
+  tacticName    String
+  techniqueName String
+  description   String?  @db.Text
+  confidence    Float
+  aiAnalysis    String?  @db.Text
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([projectId, mitreId])
+  @@map("ttp_mappings")
+}
+
+model Template {
+  id        String         @id @default(uuid())
+  name      String
+  type      AssessmentType
+  content   Json
+  isDefault Boolean        @default(false)
+
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@map("templates")
+}
+
+model Report {
+  id           String       @id @default(uuid())
+  projectId    String
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  templateId   String
+  generatedBy  String
+  exportFormat ExportFormat
+  fileUrl      String
+
+  createdAt    DateTime     @default(now())
+
+  @@index([projectId])
+  @@map("reports")
+}
+
+// Enums
+enum Role {
+  USER
+  ADMIN
+}
+
+enum AssessmentType {
+  PENTEST
+  VULN_ASSESSMENT
+  SECURITY_AUDIT
+  RED_TEAM
+}
+
+enum ProjectStatus {
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum Severity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+  INFO
+}
+
+enum FindingStatus {
+  NEW
+  IN_REVIEW
+  VERIFIED
+  MITIGATED
+}
+
+enum ExportFormat {
+  PDF
+  DOCX
+}
+
+enum MemberRole {
+  OWNER
+  EDITOR
+  VIEWER
+}
+
+enum IOCType {
+  IP_ADDRESS
+  DOMAIN
+  URL
+  FILE_HASH_MD5
+  FILE_HASH_SHA1
+  FILE_HASH_SHA256
+  EMAIL
+  CVE
+  REGISTRY_KEY
+  MUTEX
+  USER_AGENT
+  CERTIFICATE
+  FILE_PATH
+  COMMAND_LINE
+}

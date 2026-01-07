@@ -1,0 +1,21 @@
+{
+  "name": "cybersecurity-report-generator",
+  "version": "1.0.0",
+  "description": "Web application for generating professional cybersecurity assessment reports",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:client": "cd client && npm run dev",
+    "dev:server": "cd server && npm run dev",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "cd client && npm run build",
+    "build:server": "cd server && npm run build",
+    "install:all": "npm install && cd client && npm install && cd ../server && npm install",
+    "db:migrate": "cd server && npx prisma migrate dev",
+    "db:generate": "cd server && npx prisma generate",
+    "db:seed": "cd server && npx prisma db seed"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
