@@ -114,8 +114,8 @@ export const analyzeTTPs = async (
 
         // Extract IOC IDs mentioned in the reasoning (simplified approach)
         const iocIds = iocs
-          .filter((ioc) => ttp.reasoning.toLowerCase().includes(ioc.value.toLowerCase()))
-          .map((ioc) => ioc.id)
+          .filter((ioc: any) => ttp.reasoning.toLowerCase().includes(ioc.value.toLowerCase()))
+          .map((ioc: any) => ioc.id)
 
         return prisma.tTPMapping.create({
           data: {

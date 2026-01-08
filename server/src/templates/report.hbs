@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{project.name}} - Security Assessment Report</title>
+    <style>
+        /* ===========================
+           CSS RESET & BASE STYLES
+           =========================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Color Palette */
+            --color-primary: #1e40af;
+            --color-primary-dark: #1e3a8a;
+            --color-secondary: #64748b;
+            --color-success: #10b981;
+            --color-warning: #f59e0b;
+            --color-danger: #ef4444;
+            --color-info: #3b82f6;
+
+            /* Severity Colors */
+            --color-critical: #dc2626;
+            --color-high: #ea580c;
+            --color-medium: #f59e0b;
+            --color-low: #eab308;
+            --color-info-severity: #3b82f6;
+
+            /* Maturity Colors */
+            --color-maturity-1: #dc2626;
+            --color-maturity-2: #f59e0b;
+            --color-maturity-3: #eab308;
+            --color-maturity-4: #84cc16;
+            --color-maturity-5: #10b981;
+
+            /* Neutral Colors */
+            --color-gray-50: #f9fafb;
+            --color-gray-100: #f3f4f6;
+            --color-gray-200: #e5e7eb;
+            --color-gray-300: #d1d5db;
+            --color-gray-400: #9ca3af;
+            --color-gray-500: #6b7280;
+            --color-gray-600: #4b5563;
+            --color-gray-700: #374151;
+            --color-gray-800: #1f2937;
+            --color-gray-900: #111827;
+
+            /* Spacing */
+            --spacing-xs: 0.25rem;
+            --spacing-sm: 0.5rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --spacing-xl: 2rem;
+            --spacing-2xl: 3rem;
+            --spacing-3xl: 4rem;
+
+            /* Typography */
+            --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            --font-mono: 'Courier New', Courier, monospace;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            line-height: 1.6;
+            color: var(--color-gray-800);
+            background: white;
+            font-size: 11pt;
+        }
+
+        /* ===========================
+           LAYOUT & CONTAINERS
+           =========================== */
+        .page {
+            max-width: 8.5in;
+            margin: 0 auto;
+            padding: var(--spacing-xl);
+            background: white;
+        }
+
+        .container {
+            width: 100%;
+        }
+
+        .section {
+            margin-bottom: var(--spacing-2xl);
+            page-break-inside: avoid;
+        }
+
+        .section-header {
+            border-bottom: 3px solid var(--color-primary);
+            padding-bottom: var(--spacing-md);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .section-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--color-gray-900);
+            margin: 0;
+        }
+
+        .subsection {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .subsection-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--color-gray-800);
+            margin-bottom: var(--spacing-md);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 1px solid var(--color-gray-200);
+        }
+
+        /* ===========================
+           HEADER / COVER PAGE
+           =========================== */
+        .report-header {
+            text-align: center;
+            padding: var(--spacing-3xl) 0;
+            margin-bottom: var(--spacing-3xl);
+            border-bottom: 4px solid var(--color-primary);
+            page-break-after: always;
+        }
+
+        .report-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .report-subtitle {
+            font-size: 1.5rem;
+            color: var(--color-gray-600);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .report-meta {
+            display: flex;
+            justify-content: center;
+            gap: var(--spacing-xl);
+            flex-wrap: wrap;
+            margin-top: var(--spacing-xl);
+        }
+
+        .report-meta-item {
+            text-align: left;
+        }
+
+        .report-meta-label {
+            font-size: 0.875rem;
+            color: var(--color-gray-500);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .report-meta-value {
+            font-size: 1.125rem;
+            color: var(--color-gray-900);
+            font-weight: 500;
+        }
+
+        .report-classification {
+            display: inline-block;
+            margin-top: var(--spacing-xl);
+            padding: var(--spacing-sm) var(--spacing-lg);
+            background: var(--color-danger);
+            color: white;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border-radius: 4px;
+        }
+
+        /* ===========================
+           EXECUTIVE SUMMARY
+           =========================== */
+        .risk-headline {
+            background: linear-gradient(135deg, var(--color-danger) 0%, var(--color-warning) 100%);
+            color: white;
+            padding: var(--spacing-xl);
+            border-radius: 8px;
+            margin-bottom: var(--spacing-xl);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .risk-headline-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .risk-headline-text {
+            font-size: 1.125rem;
+            line-height: 1.5;
+        }
+
+        .risk-positioning {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--color-gray-50);
+            padding: var(--spacing-xl);
+            border-radius: 8px;
+            margin: var(--spacing-xl) 0;
+            border: 1px solid var(--color-gray-200);
+        }
+
+        .risk-scale {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .risk-scale-bar {
+            flex: 1;
+            height: 40px;
+            display: flex;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .risk-scale-segment {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.75rem;
+            color: white;
+            text-transform: uppercase;
+        }
+
+        .risk-scale-segment.critical {
+            background: var(--color-critical);
+        }
+
+        .risk-scale-segment.high {
+            background: var(--color-high);
+        }
+
+        .risk-scale-segment.medium {
+            background: var(--color-medium);
+        }
+
+        .risk-scale-segment.low {
+            background: var(--color-low);
+        }
+
+        .risk-scale-segment.minimal {
+            background: var(--color-success);
+        }
+
+        .risk-indicator {
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 20px solid var(--color-gray-900);
+            position: relative;
+            margin-top: -60px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .risk-label {
+            text-align: center;
+            margin-top: var(--spacing-md);
+            font-weight: 600;
+            color: var(--color-gray-700);
+        }
+
+        .executive-overview {
+            line-height: 1.8;
+            color: var(--color-gray-700);
+        }
+
+        .executive-overview p {
+            margin-bottom: var(--spacing-md);
+        }
+
+        /* ===========================
+           STATISTICS & METRICS
+           =========================== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-lg);
+            margin: var(--spacing-xl) 0;
+        }
+
+        .stat-card {
+            background: var(--color-gray-50);
+            border: 2px solid var(--color-gray-200);
+            border-radius: 8px;
+            padding: var(--spacing-lg);
+            text-align: center;
+        }
+
+        .stat-card.critical {
+            border-color: var(--color-critical);
+            background: rgba(220, 38, 38, 0.05);
+        }
+
+        .stat-card.high {
+            border-color: var(--color-high);
+            background: rgba(234, 88, 12, 0.05);
+        }
+
+        .stat-card.medium {
+            border-color: var(--color-medium);
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .stat-card.low {
+            border-color: var(--color-low);
+            background: rgba(234, 179, 8, 0.05);
+        }
+
+        .stat-card.info {
+            border-color: var(--color-info);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--color-gray-900);
+            line-height: 1;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--color-gray-600);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* ===========================
+           TABLES
+           =========================== */
+        .table-container {
+            overflow-x: auto;
+            margin: var(--spacing-lg) 0;
+            border: 1px solid var(--color-gray-200);
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        thead {
+            background: var(--color-gray-800);
+            color: white;
+        }
+
+        thead th {
+            padding: var(--spacing-md);
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.75rem;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--color-gray-200);
+        }
+
+        tbody tr:hover {
+            background: var(--color-gray-50);
+        }
+
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        tbody td {
+            padding: var(--spacing-md);
+            vertical-align: top;
+        }
+
+        /* ===========================
+           BADGES & LABELS
+           =========================== */
+        .badge {
+            display: inline-block;
+            padding: var(--spacing-xs) var(--spacing-md);
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge.critical {
+            background: var(--color-critical);
+            color: white;
+        }
+
+        .badge.high {
+            background: var(--color-high);
+            color: white;
+        }
+
+        .badge.medium {
+            background: var(--color-medium);
+            color: white;
+        }
+
+        .badge.low {
+            background: var(--color-low);
+            color: var(--color-gray-900);
+        }
+
+        .badge.info {
+            background: var(--color-info);
+            color: white;
+        }
+
+        .badge.success {
+            background: var(--color-success);
+            color: white;
+        }
+
+        .badge.warning {
+            background: var(--color-warning);
+            color: white;
+        }
+
+        .badge.danger {
+            background: var(--color-danger);
+            color: white;
+        }
+
+        /* Maturity Level Badges */
+        .maturity-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-xs) var(--spacing-md);
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .maturity-badge.level-1 {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--color-maturity-1);
+            border: 1px solid var(--color-maturity-1);
+        }
+
+        .maturity-badge.level-2 {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--color-maturity-2);
+            border: 1px solid var(--color-maturity-2);
+        }
+
+        .maturity-badge.level-3 {
+            background: rgba(234, 179, 8, 0.1);
+            color: var(--color-maturity-3);
+            border: 1px solid var(--color-maturity-3);
+        }
+
+        .maturity-badge.level-4 {
+            background: rgba(132, 204, 22, 0.1);
+            color: var(--color-maturity-4);
+            border: 1px solid var(--color-maturity-4);
+        }
+
+        .maturity-badge.level-5 {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--color-maturity-5);
+            border: 1px solid var(--color-maturity-5);
+        }
+
+        /* ===========================
+           CONTROL DOMAINS
+           =========================== */
+        .control-domain {
+            margin-bottom: var(--spacing-2xl);
+            page-break-inside: avoid;
+        }
+
+        .control-domain-header {
+            background: var(--color-primary);
+            color: white;
+            padding: var(--spacing-lg);
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .control-domain-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .control-domain-body {
+            border: 1px solid var(--color-gray-200);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            padding: var(--spacing-lg);
+            background: white;
+        }
+
+        .control-commentary {
+            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-md);
+            background: var(--color-gray-50);
+            border-left: 4px solid var(--color-primary);
+            line-height: 1.7;
+        }
+
+        .technical-finding {
+            background: white;
+            border: 1px solid var(--color-gray-200);
+            border-radius: 8px;
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .technical-finding-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .technical-finding-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--color-gray-900);
+            margin: 0;
+        }
+
+        .technical-finding-content {
+            line-height: 1.7;
+            color: var(--color-gray-700);
+        }
+
+        .technical-finding-meta {
+            display: flex;
+            gap: var(--spacing-lg);
+            margin-top: var(--spacing-md);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--color-gray-200);
+            font-size: 0.875rem;
+        }
+
+        .technical-finding-meta-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .technical-finding-meta-label {
+            color: var(--color-gray-500);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        .technical-finding-meta-value {
+            color: var(--color-gray-900);
+            font-weight: 500;
+        }
+
+        /* ===========================
+           CODE BLOCKS & EVIDENCE
+           =========================== */
+        .code-block {
+            background: var(--color-gray-900);
+            color: #e5e7eb;
+            padding: var(--spacing-md);
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            overflow-x: auto;
+            margin: var(--spacing-md) 0;
+            line-height: 1.5;
+        }
+
+        .evidence-section {
+            background: var(--color-gray-50);
+            border: 1px solid var(--color-gray-200);
+            border-radius: 8px;
+            padding: var(--spacing-lg);
+            margin: var(--spacing-md) 0;
+        }
+
+        .evidence-title {
+            font-weight: 600;
+            color: var(--color-gray-800);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        /* ===========================
+           RECOMMENDATIONS
+           =========================== */
+        .recommendation-card {
+            background: white;
+            border: 1px solid var(--color-gray-200);
+            border-radius: 8px;
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .recommendation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .recommendation-priority {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            font-weight: 700;
+            font-size: 0.875rem;
+        }
+
+        .recommendation-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--color-gray-900);
+            margin: var(--spacing-sm) 0;
+        }
+
+        .recommendation-description {
+            color: var(--color-gray-700);
+            line-height: 1.7;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .recommendation-footer {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: var(--spacing-md);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--color-gray-200);
+        }
+
+        .recommendation-metric {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .recommendation-metric-label {
+            font-size: 0.75rem;
+            color: var(--color-gray-500);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .recommendation-metric-value {
+            font-size: 1rem;
+            color: var(--color-gray-900);
+            font-weight: 600;
+        }
+
+        /* ===========================
+           IMPLEMENTATION ROADMAP
+           =========================== */
+        .roadmap-container {
+            margin: var(--spacing-xl) 0;
+        }
+
+        .timeline {
+            position: relative;
+            padding: var(--spacing-xl) 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 30px;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--color-gray-300);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 70px;
+            margin-bottom: var(--spacing-2xl);
+            page-break-inside: avoid;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: 16px;
+            top: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            border: 4px solid white;
+            box-shadow: 0 0 0 2px var(--color-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 0.875rem;
+            z-index: 1;
+        }
+
+        .timeline-content {
+            background: white;
+            border: 2px solid var(--color-gray-200);
+            border-radius: 8px;
+            padding: var(--spacing-lg);
+        }
+
+        .timeline-phase {
+            font-size: 0.875rem;
+            color: var(--color-primary);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .timeline-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--color-gray-900);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .timeline-activities {
+            list-style: none;
+            margin-top: var(--spacing-md);
+        }
+
+        .timeline-activities li {
+            padding: var(--spacing-sm) 0;
+            padding-left: var(--spacing-lg);
+            position: relative;
+            line-height: 1.6;
+            color: var(--color-gray-700);
+        }
+
+        .timeline-activities li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--color-primary);
+            font-weight: 700;
+        }
+
+        .timeline-duration {
+            display: inline-block;
+            margin-top: var(--spacing-md);
+            padding: var(--spacing-xs) var(--spacing-md);
+            background: var(--color-gray-100);
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--color-gray-700);
+        }
+
+        /* ===========================
+           LISTS
+           =========================== */
+        .list-styled {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .list-styled li {
+            padding: var(--spacing-sm) 0;
+            padding-left: var(--spacing-lg);
+            position: relative;
+            line-height: 1.6;
+        }
+
+        .list-styled li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: var(--color-primary);
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        /* ===========================
+           ALERTS & CALLOUTS
+           =========================== */
+        .alert {
+            padding: var(--spacing-lg);
+            border-radius: 8px;
+            margin: var(--spacing-lg) 0;
+            border-left: 4px solid;
+        }
+
+        .alert.alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: var(--color-danger);
+            color: #991b1b;
+        }
+
+        .alert.alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: var(--color-warning);
+            color: #92400e;
+        }
+
+        .alert.alert-info {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--color-info);
+            color: #1e40af;
+        }
+
+        .alert.alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: var(--color-success);
+            color: #065f46;
+        }
+
+        .alert-title {
+            font-weight: 700;
+            margin-bottom: var(--spacing-sm);
+            font-size: 1rem;
+        }
+
+        /* ===========================
+           UTILITY CLASSES
+           =========================== */
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-bold {
+            font-weight: 700;
+        }
+
+        .text-semibold {
+            font-weight: 600;
+        }
+
+        .text-small {
+            font-size: 0.875rem;
+        }
+
+        .text-large {
+            font-size: 1.125rem;
+        }
+
+        .text-muted {
+            color: var(--color-gray-500);
+        }
+
+        .mb-sm {
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .mb-md {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .mb-lg {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .mb-xl {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .mt-sm {
+            margin-top: var(--spacing-sm);
+        }
+
+        .mt-md {
+            margin-top: var(--spacing-md);
+        }
+
+        .mt-lg {
+            margin-top: var(--spacing-lg);
+        }
+
+        .mt-xl {
+            margin-top: var(--spacing-xl);
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        .flex-gap {
+            gap: var(--spacing-md);
+        }
+
+        .flex-between {
+            justify-content: space-between;
+        }
+
+        .flex-center {
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* ===========================
+           PRINT STYLES
+           =========================== */
+        @media print {
+            body {
+                font-size: 10pt;
+            }
+
+            .page {
+                max-width: 100%;
+                padding: 0;
+            }
+
+            .section {
+                page-break-inside: avoid;
+            }
+
+            .report-header {
+                page-break-after: always;
+            }
+
+            .control-domain {
+                page-break-inside: avoid;
+            }
+
+            .technical-finding {
+                page-break-inside: avoid;
+            }
+
+            .recommendation-card {
+                page-break-inside: avoid;
+            }
+
+            .timeline-item {
+                page-break-inside: avoid;
+            }
+
+            /* Hide interactive elements when printing */
+            button,
+            .no-print {
+                display: none;
+            }
+
+            /* Ensure proper color printing */
+            .badge,
+            .stat-card,
+            .risk-headline,
+            .control-domain-header {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+
+        /* ===========================
+           RESPONSIVE DESIGN
+           =========================== */
+        @media (max-width: 768px) {
+            .report-meta {
+                flex-direction: column;
+                gap: var(--spacing-md);
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .table-container {
+                overflow-x: scroll;
+            }
+
+            .recommendation-footer {
+                grid-template-columns: 1fr;
+            }
+
+            .timeline::before {
+                left: 15px;
+            }
+
+            .timeline-item {
+                padding-left: 50px;
+            }
+
+            .timeline-marker {
+                left: 3px;
+                width: 26px;
+                height: 26px;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <!-- ===========================
+             REPORT HEADER / COVER PAGE
+             =========================== -->
+        <header class="report-header">
+            <h1 class="report-title">Security Assessment Report</h1>
+            <h2 class="report-subtitle">{{project.name}}</h2>
+
+            <div class="report-meta">
+                <div class="report-meta-item">
+                    <div class="report-meta-label">Client</div>
+                    <div class="report-meta-value">{{project.clientName}}</div>
+                </div>
+                <div class="report-meta-item">
+                    <div class="report-meta-label">Assessment Type</div>
+                    <div class="report-meta-value">{{project.assessmentType}}</div>
+                </div>
+                <div class="report-meta-item">
+                    <div class="report-meta-label">Report Date</div>
+                    <div class="report-meta-value">{{reportDate}}</div>
+                </div>
+                <div class="report-meta-item">
+                    <div class="report-meta-label">Assessment Period</div>
+                    <div class="report-meta-value">{{project.startDate}} - {{project.endDate}}</div>
+                </div>
+            </div>
+
+            {{#if classification}}
+            <div class="report-classification">{{classification}}</div>
+            {{/if}}
+        </header>
+
+        <!-- ===========================
+             1. EXECUTIVE SUMMARY
+             =========================== -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Executive Summary</h2>
+            </div>
+
+            <!-- Risk Headline -->
+            <div class="risk-headline">
+                <h3 class="risk-headline-title">{{executiveSummary.riskHeadline.title}}</h3>
+                <p class="risk-headline-text">{{executiveSummary.riskHeadline.message}}</p>
+            </div>
+
+            <!-- Risk Positioning Indicator -->
+            <div class="risk-positioning">
+                <div style="flex: 1;">
+                    <h4 style="margin-bottom: var(--spacing-md); color: var(--color-gray-700);">Overall Risk Level</h4>
+                    <div class="risk-scale">
+                        <div class="risk-scale-bar">
+                            <div class="risk-scale-segment critical">Critical</div>
+                            <div class="risk-scale-segment high">High</div>
+                            <div class="risk-scale-segment medium">Medium</div>
+                            <div class="risk-scale-segment low">Low</div>
+                            <div class="risk-scale-segment minimal">Minimal</div>
+                        </div>
+                    </div>
+                    <div class="risk-indicator" style="margin-left: {{executiveSummary.riskPosition}}%;"></div>
+                    <div class="risk-label">Current Risk: {{executiveSummary.riskLevel}}</div>
+                </div>
+            </div>
+
+            <!-- Executive Overview Paragraphs -->
+            <div class="executive-overview">
+                {{#each executiveSummary.overview}}
+                <p>{{this}}</p>
+                {{/each}}
+            </div>
+
+            <!-- Key Statistics -->
+            <div class="stats-grid">
+                <div class="stat-card critical">
+                    <div class="stat-value">{{statistics.findings.critical}}</div>
+                    <div class="stat-label">Critical</div>
+                </div>
+                <div class="stat-card high">
+                    <div class="stat-value">{{statistics.findings.high}}</div>
+                    <div class="stat-label">High</div>
+                </div>
+                <div class="stat-card medium">
+                    <div class="stat-value">{{statistics.findings.medium}}</div>
+                    <div class="stat-label">Medium</div>
+                </div>
+                <div class="stat-card low">
+                    <div class="stat-value">{{statistics.findings.low}}</div>
+                    <div class="stat-label">Low</div>
+                </div>
+                <div class="stat-card info">
+                    <div class="stat-value">{{statistics.findings.info}}</div>
+                    <div class="stat-label">Informational</div>
+                </div>
+            </div>
+
+            <!-- Key Findings Summary -->
+            {{#if executiveSummary.keyFindings}}
+            <div class="subsection">
+                <h3 class="subsection-title">Key Findings</h3>
+                <ul class="list-styled">
+                    {{#each executiveSummary.keyFindings}}
+                    <li>{{this}}</li>
+                    {{/each}}
+                </ul>
+            </div>
+            {{/if}}
+        </section>
+
+        <!-- ===========================
+             2. CONTROL ASSESSMENTS
+             =========================== -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Control Assessment Summary</h2>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 30%;">Control Domain</th>
+                            <th style="width: 40%;">Assessment</th>
+                            <th style="width: 15%;">Maturity</th>
+                            <th style="width: 15%;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each controlAssessments}}
+                        <tr>
+                            <td>
+                                <strong>{{this.domain}}</strong>
+                                <div class="text-small text-muted">{{this.controlId}}</div>
+                            </td>
+                            <td>{{this.assessment}}</td>
+                            <td>
+                                <span class="maturity-badge level-{{this.maturityLevel}}">
+                                    Level {{this.maturityLevel}}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge {{this.statusClass}}">{{this.status}}</span>
+                            </td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Maturity Scale Legend -->
+            <div class="alert alert-info">
+                <div class="alert-title">Maturity Model Reference</div>
+                <div style="margin-top: var(--spacing-md);">
+                    <strong>Level 1 - Initial:</strong> Ad-hoc processes, minimal documentation<br>
+                    <strong>Level 2 - Developing:</strong> Basic processes defined, some documentation<br>
+                    <strong>Level 3 - Defined:</strong> Documented processes, consistent implementation<br>
+                    <strong>Level 4 - Managed:</strong> Measured processes, continuous monitoring<br>
+                    <strong>Level 5 - Optimized:</strong> Continuous improvement, industry-leading practices
+                </div>
+            </div>
+        </section>
+
+        <!-- ===========================
+             3. DETAILED CONTROL DOMAIN SECTIONS
+             =========================== -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Detailed Control Analysis</h2>
+            </div>
+
+            {{#each controlDomains}}
+            <div class="control-domain">
+                <!-- Domain Header -->
+                <div class="control-domain-header">
+                    <h3 class="control-domain-title">{{this.name}}</h3>
+                    <span class="maturity-badge level-{{this.maturityLevel}}">
+                        Maturity Level {{this.maturityLevel}}
+                    </span>
+                </div>
+
+                <!-- Domain Body -->
+                <div class="control-domain-body">
+                    <!-- Commentary -->
+                    <div class="control-commentary">
+                        <strong>Assessment Commentary:</strong><br>
+                        {{this.commentary}}
+                    </div>
+
+                    <!-- Technical Findings -->
+                    {{#if this.findings}}
+                    <h4 style="margin-bottom: var(--spacing-md); color: var(--color-gray-800);">Technical Findings</h4>
+                    {{#each this.findings}}
+                    <div class="technical-finding">
+                        <div class="technical-finding-header">
+                            <h5 class="technical-finding-title">{{this.title}}</h5>
+                            <span class="badge {{this.severityClass}}">{{this.severity}}</span>
+                        </div>
+
+                        <div class="technical-finding-content">
+                            <p><strong>Description:</strong></p>
+                            <p>{{this.description}}</p>
+
+                            {{#if this.evidence}}
+                            <div class="evidence-section">
+                                <div class="evidence-title">Evidence:</div>
+                                <div>{{this.evidence}}</div>
+                            </div>
+                            {{/if}}
+
+                            {{#if this.affectedSystems}}
+                            <p><strong>Affected Systems:</strong></p>
+                            <ul class="list-styled">
+                                {{#each this.affectedSystems}}
+                                <li>{{this}}</li>
+                                {{/each}}
+                            </ul>
+                            {{/if}}
+
+                            <p><strong>Remediation:</strong></p>
+                            <p>{{this.remediation}}</p>
+                        </div>
+
+                        <div class="technical-finding-meta">
+                            {{#if this.cvssScore}}
+                            <div class="technical-finding-meta-item">
+                                <span class="technical-finding-meta-label">CVSS Score</span>
+                                <span class="technical-finding-meta-value">{{this.cvssScore}}</span>
+                            </div>
+                            {{/if}}
+                            <div class="technical-finding-meta-item">
+                                <span class="technical-finding-meta-label">Status</span>
+                                <span class="technical-finding-meta-value">{{this.status}}</span>
+                            </div>
+                            {{#if this.assignee}}
+                            <div class="technical-finding-meta-item">
+                                <span class="technical-finding-meta-label">Assigned To</span>
+                                <span class="technical-finding-meta-value">{{this.assignee}}</span>
+                            </div>
+                            {{/if}}
+                        </div>
+                    </div>
+                    {{/each}}
+                    {{/if}}
+
+                    <!-- Strengths -->
+                    {{#if this.strengths}}
+                    <div class="alert alert-success">
+                        <div class="alert-title">Strengths Identified</div>
+                        <ul class="list-styled">
+                            {{#each this.strengths}}
+                            <li>{{this}}</li>
+                            {{/each}}
+                        </ul>
+                    </div>
+                    {{/if}}
+
+                    <!-- Weaknesses -->
+                    {{#if this.weaknesses}}
+                    <div class="alert alert-warning">
+                        <div class="alert-title">Areas for Improvement</div>
+                        <ul class="list-styled">
+                            {{#each this.weaknesses}}
+                            <li>{{this}}</li>
+                            {{/each}}
+                        </ul>
+                    </div>
+                    {{/if}}
+                </div>
+            </div>
+            {{/each}}
+        </section>
+
+        <!-- ===========================
+             4. RECOMMENDATIONS
+             =========================== -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Prioritized Recommendations</h2>
+            </div>
+
+            <p class="mb-lg">The following recommendations are prioritized based on risk, impact, and feasibility. Each recommendation includes estimated effort and cost to assist with planning and resource allocation.</p>
+
+            {{#each recommendations}}
+            <div class="recommendation-card">
+                <div class="recommendation-header">
+                    <div>
+                        <div class="recommendation-priority">
+                            <span class="badge {{this.priorityClass}}">Priority {{this.priority}}</span>
+                            {{#if this.riskReduction}}
+                            <span class="text-muted text-small">Risk Reduction: {{this.riskReduction}}</span>
+                            {{/if}}
+                        </div>
+                        <h3 class="recommendation-title">{{this.title}}</h3>
+                    </div>
+                    {{#if this.relatedDomain}}
+                    <span class="badge info">{{this.relatedDomain}}</span>
+                    {{/if}}
+                </div>
+
+                <div class="recommendation-description">
+                    {{this.description}}
+                </div>
+
+                {{#if this.actionItems}}
+                <div class="mb-md">
+                    <strong class="text-small text-muted">ACTION ITEMS:</strong>
+                    <ul class="list-styled">
+                        {{#each this.actionItems}}
+                        <li>{{this}}</li>
+                        {{/each}}
+                    </ul>
+                </div>
+                {{/if}}
+
+                <div class="recommendation-footer">
+                    <div class="recommendation-metric">
+                        <span class="recommendation-metric-label">Effort</span>
+                        <span class="recommendation-metric-value">{{this.effort}}</span>
+                    </div>
+                    <div class="recommendation-metric">
+                        <span class="recommendation-metric-label">Est. Cost</span>
+                        <span class="recommendation-metric-value">{{this.estimatedCost}}</span>
+                    </div>
+                    <div class="recommendation-metric">
+                        <span class="recommendation-metric-label">Timeline</span>
+                        <span class="recommendation-metric-value">{{this.timeline}}</span>
+                    </div>
+                    <div class="recommendation-metric">
+                        <span class="recommendation-metric-label">Complexity</span>
+                        <span class="recommendation-metric-value">{{this.complexity}}</span>
+                    </div>
+                </div>
+            </div>
+            {{/each}}
+        </section>
+
+        <!-- ===========================
+             5. IMPLEMENTATION ROADMAP
+             =========================== -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Implementation Roadmap</h2>
+            </div>
+
+            <p class="mb-lg">This roadmap provides a phased approach to implementing the recommendations. Each phase includes specific activities, deliverables, and expected outcomes.</p>
+
+            <div class="roadmap-container">
+                <div class="timeline">
+                    {{#each roadmapPhases}}
+                    <div class="timeline-item">
+                        <div class="timeline-marker">{{this.phaseNumber}}</div>
+                        <div class="timeline-content">
+                            <div class="timeline-phase">Phase {{this.phaseNumber}}</div>
+                            <h3 class="timeline-title">{{this.title}}</h3>
+                            <p class="text-muted mb-md">{{this.description}}</p>
+
+                            {{#if this.activities}}
+                            <div>
+                                <strong class="text-small" style="color: var(--color-gray-700);">KEY ACTIVITIES:</strong>
+                                <ul class="timeline-activities">
+                                    {{#each this.activities}}
+                                    <li>{{this}}</li>
+                                    {{/each}}
+                                </ul>
+                            </div>
+                            {{/if}}
+
+                            {{#if this.deliverables}}
+                            <div class="mt-md">
+                                <strong class="text-small" style="color: var(--color-gray-700);">DELIVERABLES:</strong>
+                                <ul class="timeline-activities">
+                                    {{#each this.deliverables}}
+                                    <li>{{this}}</li>
+                                    {{/each}}
+                                </ul>
+                            </div>
+                            {{/if}}
+
+                            <div class="flex flex-gap mt-md">
+                                <span class="timeline-duration">Duration: {{this.duration}}</span>
+                                {{#if this.dependencies}}
+                                <span class="text-small text-muted">Dependencies: {{this.dependencies}}</span>
+                                {{/if}}
+                            </div>
+                        </div>
+                    </div>
+                    {{/each}}
+                </div>
+            </div>
+
+            <!-- Roadmap Summary -->
+            {{#if roadmapSummary}}
+            <div class="alert alert-info">
+                <div class="alert-title">Roadmap Summary</div>
+                <div style="line-height: 1.7;">
+                    {{roadmapSummary.text}}
+                    {{#if roadmapSummary.totalDuration}}
+                    <br><br>
+                    <strong>Total Estimated Duration:</strong> {{roadmapSummary.totalDuration}}<br>
+                    <strong>Total Estimated Cost:</strong> {{roadmapSummary.totalCost}}
+                    {{/if}}
+                </div>
+            </div>
+            {{/if}}
+        </section>
+
+        <!-- ===========================
+             APPENDIX: METHODOLOGY
+             =========================== -->
+        {{#if methodology}}
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Appendix A: Assessment Methodology</h2>
+            </div>
+
+            <div class="executive-overview">
+                <p>{{methodology.description}}</p>
+
+                {{#if methodology.scope}}
+                <h3 class="subsection-title">Scope</h3>
+                <ul class="list-styled">
+                    {{#each methodology.scope}}
+                    <li>{{this}}</li>
+                    {{/each}}
+                </ul>
+                {{/if}}
+
+                {{#if methodology.approach}}
+                <h3 class="subsection-title">Approach</h3>
+                <ul class="list-styled">
+                    {{#each methodology.approach}}
+                    <li>{{this}}</li>
+                    {{/each}}
+                </ul>
+                {{/if}}
+
+                {{#if methodology.tools}}
+                <h3 class="subsection-title">Tools & Frameworks</h3>
+                <ul class="list-styled">
+                    {{#each methodology.tools}}
+                    <li>{{this}}</li>
+                    {{/each}}
+                </ul>
+                {{/if}}
+            </div>
+        </section>
+        {{/if}}
+
+        <!-- ===========================
+             APPENDIX: MITRE ATT&CK MAPPING
+             =========================== -->
+        {{#if mitreMapping}}
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Appendix B: MITRE ATT&CK Mapping</h2>
+            </div>
+
+            <p class="mb-lg">The following table maps observed indicators and techniques to the MITRE ATT&CK framework for threat intelligence correlation.</p>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">Tactic</th>
+                            <th style="width: 20%;">Technique</th>
+                            <th style="width: 15%;">ID</th>
+                            <th style="width: 35%;">Description</th>
+                            <th style="width: 15%;">Confidence</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each mitreMapping}}
+                        <tr>
+                            <td><strong>{{this.tacticName}}</strong></td>
+                            <td>{{this.techniqueName}}</td>
+                            <td><code>{{this.mitreId}}</code></td>
+                            <td class="text-small">{{this.description}}</td>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <div style="flex: 1; height: 8px; background: var(--color-gray-200); border-radius: 4px;">
+                                        <div style="width: {{this.confidence}}%; height: 100%; background: var(--color-primary); border-radius: 4px;"></div>
+                                    </div>
+                                    <span class="text-small text-bold">{{this.confidence}}%</span>
+                                </div>
+                            </td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {{/if}}
+
+        <!-- ===========================
+             APPENDIX: IOC LIST
+             =========================== -->
+        {{#if iocs}}
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Appendix C: Indicators of Compromise (IOCs)</h2>
+            </div>
+
+            <div class="alert alert-warning">
+                <div class="alert-title">Confidential Information</div>
+                This section contains sensitive indicators of compromise identified during the assessment. Handle with appropriate care and restrict access accordingly.
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">Type</th>
+                            <th style="width: 35%;">Value</th>
+                            <th style="width: 15%;">Timestamp</th>
+                            <th style="width: 20%;">Source</th>
+                            <th style="width: 15%;">Context</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each iocs}}
+                        <tr>
+                            <td><span class="badge info">{{this.type}}</span></td>
+                            <td><code style="font-size: 0.8rem;">{{this.value}}</code></td>
+                            <td class="text-small">{{this.timestamp}}</td>
+                            <td class="text-small">{{this.source}}</td>
+                            <td class="text-small">{{this.context}}</td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {{/if}}
+
+        <!-- ===========================
+             FOOTER / DISCLAIMER
+             =========================== -->
+        <footer style="margin-top: var(--spacing-3xl); padding-top: var(--spacing-xl); border-top: 2px solid var(--color-gray-300);">
+            <div class="text-center text-small text-muted">
+                <p><strong>Disclaimer:</strong> This report contains confidential and proprietary information. It is intended solely for the use of {{project.clientName}}. Any reproduction, disclosure, or distribution without written consent is prohibited.</p>
+                <p class="mt-md">Generated on {{reportDate}} | {{project.name}}</p>
+                {{#if footer}}
+                <p class="mt-sm">{{footer}}</p>
+                {{/if}}
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
