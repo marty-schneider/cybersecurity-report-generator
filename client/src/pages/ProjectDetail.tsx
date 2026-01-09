@@ -144,6 +144,9 @@ export default function ProjectDetail() {
             <Link to={`/projects/${id}/threat-analysis`}>
               <Button>🔍 Threat Analysis</Button>
             </Link>
+            <Link to={`/projects/${id}/report`}>
+              <Button variant="primary">📄 Generate Report</Button>
+            </Link>
             <Button variant="secondary">⚙️ Settings</Button>
           </div>
         </div>
