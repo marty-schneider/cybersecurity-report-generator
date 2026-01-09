@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard'
 import ProjectList from './pages/ProjectList'
 import ProjectDetail from './pages/ProjectDetail'
 import ThreatAnalysis from './pages/ThreatAnalysis'
+import ReportViewer from './pages/ReportViewer'
 import Layout from './components/layout/Layout'
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
           <Route path="projects" element={<ProjectList />} />
           <Route path="projects/:id" element={<ProjectDetail />} />
           <Route path="projects/:id/threat-analysis" element={<ThreatAnalysis />} />
+          <Route path="projects/:projectId/report" element={<ReportViewer />} />
         </Route>
 
         {/* Catch-all */}

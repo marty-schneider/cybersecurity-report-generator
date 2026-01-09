@@ -1,16 +1,18 @@
 import { Router } from 'express'
 import { authenticate } from '../middleware/auth.js'
+import { reportController } from '../controllers/reportController.js'
 
 const router = Router()
 
 router.use(authenticate)
 
-router.post('/generate', (req, res) => {
-  res.json({ message: 'Generate report - coming soon' })
-})
+// Generate new report
+router.post('/generate', (req, res) => reportController.generateReport(req, res))
 
-router.get('/:id/download', (req, res) => {
-  res.json({ message: 'Download report - coming soon' })
-})
+// Get existing report
+router.get('/:id', (req, res) => reportController.getReport(req, res))
+
+// List reports for a project
+router.get('/', (req, res) => reportController.listReports(req, res))
 
 export default router
