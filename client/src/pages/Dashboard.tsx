@@ -36,8 +36,9 @@ export default function Dashboard() {
         iocsAnalyzed: iocsCount,
         criticalFindings: 0, // Would need to fetch findings to get this
       })
-    } catch (error) {
-      // Error handling - could be enhanced with user-facing error message
+    } catch (error: any) {
+      console.error('Failed to load dashboard:', error)
+      console.error('Error details:', error.response?.data || error.message)
       setProjects([])
     } finally {
       setLoading(false)

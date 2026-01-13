@@ -41,8 +41,9 @@ export default function ThreatAnalysis() {
       ])
       setIOCs(iocsData)
       setTTPs(ttpsData)
-    } catch (error) {
-      // Error handling - could show user-facing error message
+    } catch (error: any) {
+      console.error('Failed to load data:', error)
+      console.error('Error details:', error.response?.data || error.message)
       setIOCs([])
       setTTPs([])
     } finally {
@@ -68,8 +69,10 @@ export default function ThreatAnalysis() {
         context: '',
         source: '',
       })
-    } catch (error) {
-      // Error handling - could show user-facing error message
+    } catch (error: any) {
+      console.error('Failed to create IOC:', error)
+      console.error('Error details:', error.response?.data || error.message)
+      alert(error.response?.data?.message || 'Failed to create IOC')
     }
   }
 

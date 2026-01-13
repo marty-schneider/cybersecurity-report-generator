@@ -29,6 +29,8 @@ export default function ReportViewer() {
       setReportHtml(response.html)
       setProjectName(projectId)
     } catch (err: any) {
+      console.error('Failed to generate report:', err)
+      console.error('Error details:', err.response?.data || err.message)
       setError(err.response?.data?.message || 'Failed to generate report. Please try again.')
     } finally {
       setLoading(false)

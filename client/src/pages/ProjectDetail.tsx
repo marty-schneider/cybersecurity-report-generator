@@ -43,8 +43,9 @@ export default function ProjectDetail() {
       ])
       setCurrentProject(projectData as any)
       setFindings(findingsData)
-    } catch (error) {
-      // Error handling - could show user-facing error message
+    } catch (error: any) {
+      console.error('Failed to load project:', error)
+      console.error('Error details:', error.response?.data || error.message)
       navigate('/projects')
     } finally {
       setLoading(false)
@@ -77,8 +78,10 @@ export default function ProjectDetail() {
         evidence: '',
         remediation: '',
       })
-    } catch (error) {
-      // Error handling - could show user-facing error message
+    } catch (error: any) {
+      console.error('Failed to create finding:', error)
+      console.error('Error details:', error.response?.data || error.message)
+      alert(error.response?.data?.message || 'Failed to create finding')
     }
   }
 
