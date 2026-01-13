@@ -24,9 +24,14 @@ const allowedOrigins = [
 ]
 
 // Middleware
+// Configure helmet with relaxed CORS settings for production
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+  crossOriginEmbedderPolicy: false, // Disable to allow cross-origin requests
 }))
+
+// CORS must come after helmet but with comprehensive options
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or curl)
@@ -40,10 +45,12 @@ app.use(cors({
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
   maxAge: 600, // 10 minutes
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
 }))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
