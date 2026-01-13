@@ -4,6 +4,8 @@ import helmet from 'helmet'
 import dotenv from 'dotenv'
 import { errorHandler } from './middleware/errorHandler.js'
 import { logger } from './utils/logger.js'
+import { validateEnvironment } from './utils/validateEnv.js'
+import { prisma } from './utils/db.js'
 import authRoutes from './routes/authRoutes.js'
 import projectRoutes from './routes/projectRoutes.js'
 import findingRoutes from './routes/findingRoutes.js'
@@ -11,7 +13,11 @@ import iocRoutes from './routes/iocRoutes.js'
 import ttpRoutes from './routes/ttpRoutes.js'
 import reportRoutes from './routes/reportRoutes.js'
 
+// Load environment variables first
 dotenv.config()
+
+// Validate required environment variables before starting
+validateEnvironment()
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -77,7 +83,25 @@ app.use('/api/reports', reportRoutes)
 // Error handling
 app.use(errorHandler)
 
-app.listen(PORT, () => {
-  logger.info(`Server running on port ${PORT}`)
-  logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`)
-})
+// Test database connection before starting server
+async function startServer() {
+  try {
+    // Test database connection
+    logger.info('Testing database connection...')
+    await prisma.$connect()
+    await prisma.$queryRaw`SELECT 1`
+    logger.info('✓ Database connection successful')
+
+    app.listen(PORT, () => {
+      logger.info(`Server running on port ${PORT}`)
+      logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`)
+      logger.info(`Allowed origins: ${allowedOrigins.join(', ')}`)
+    })
+  } catch (error) {
+    logger.error('Failed to start server:', error)
+    logger.error('Database connection failed. Please check your DATABASE_URL environment variable.')
+    process.exit(1)
+  }
+}
+
+startServer()
