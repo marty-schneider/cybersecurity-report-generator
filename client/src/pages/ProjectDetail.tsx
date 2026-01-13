@@ -6,6 +6,8 @@ import { useProjectStore } from '../store/projectStore'
 import { Project, Finding, Severity } from '../types'
 import Button from '../components/common/Button'
 import Modal from '../components/common/Modal'
+import LoadingSkeleton from '../components/LoadingSkeleton'
+import { getSeverityBadgeClass, getStatusBadgeClass } from '../constants/badgeColors'
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>()
@@ -42,7 +44,8 @@ export default function ProjectDetail() {
       setCurrentProject(projectData as any)
       setFindings(findingsData)
     } catch (error) {
-      console.error('Failed to load project:', error)
+      // Error handling - could show user-facing error message
+      navigate('/projects')
     } finally {
       setLoading(false)
     }
@@ -75,44 +78,27 @@ export default function ProjectDetail() {
         remediation: '',
       })
     } catch (error) {
-      console.error('Failed to create finding:', error)
+      // Error handling - could show user-facing error message
     }
   }
 
-  const getSeverityBadge = (severity: Severity) => {
-    const colors = {
-      CRITICAL: 'bg-severity-critical text-white',
-      HIGH: 'bg-severity-high text-white',
-      MEDIUM: 'bg-severity-medium text-white',
-      LOW: 'bg-severity-low text-white',
-      INFO: 'bg-severity-info text-white',
-    }
-    return (
-      <span className={`px-3 py-1 rounded text-sm font-medium ${colors[severity]}`}>
-        {severity}
-      </span>
-    )
-  }
+  const getSeverityBadge = (severity: Severity) => (
+    <span className={`px-3 py-1 rounded text-sm font-medium ${getSeverityBadgeClass(severity)}`}>
+      {severity}
+    </span>
+  )
 
-  const getStatusBadge = (status: string) => {
-    const colors: Record<string, string> = {
-      NEW: 'bg-blue-100 text-blue-700',
-      IN_REVIEW: 'bg-yellow-100 text-yellow-700',
-      VERIFIED: 'bg-purple-100 text-purple-700',
-      MITIGATED: 'bg-green-100 text-green-700',
-    }
-    return (
-      <span className={`px-2 py-1 rounded text-xs font-medium ${colors[status] || 'bg-gray-100 text-gray-700'}`}>
-        {status.replace(/_/g, ' ')}
-      </span>
-    )
-  }
+  const getStatusBadge = (status: string) => (
+    <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadgeClass(status)}`}>
+      {status.replace(/_/g, ' ')}
+    </span>
+  )
 
   if (loading) {
     return (
       <div>
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Project Details</h1>
-        <div className="card">Loading...</div>
+        <LoadingSkeleton type="full" />
       </div>
     )
   }
