@@ -24,7 +24,9 @@ const allowedOrigins = [
 ]
 
 // Middleware
-app.use(helmet())
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}))
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or curl)
@@ -33,10 +35,15 @@ app.use(cors({
     if (allowedOrigins.includes(origin)) {
       callback(null, true)
     } else {
+      logger.warn(`CORS: Blocked request from origin: ${origin}`)
       callback(new Error('Not allowed by CORS'))
     }
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 600, // 10 minutes
 }))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))

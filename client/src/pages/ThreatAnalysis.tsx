@@ -6,6 +6,8 @@ import { useIOCStore } from '../store/iocStore'
 import { IOC, IOCType, TTPMapping } from '../types'
 import Modal from '../components/common/Modal'
 import Button from '../components/common/Button'
+import LoadingSkeleton from '../components/LoadingSkeleton'
+import { getIOCTypeBadgeClass, getSeverityColor } from '../constants/badgeColors'
 
 export default function ThreatAnalysis() {
   const { id: projectId } = useParams<{ id: string }>()
@@ -39,8 +41,11 @@ export default function ThreatAnalysis() {
       ])
       setIOCs(iocsData)
       setTTPs(ttpsData)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load data:', error)
+      console.error('Error details:', error.response?.data || error.message)
+      setIOCs([])
+      setTTPs([])
     } finally {
       setLoading(false)
     }
@@ -64,8 +69,10 @@ export default function ThreatAnalysis() {
         context: '',
         source: '',
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create IOC:', error)
+      console.error('Error details:', error.response?.data || error.message)
+      alert(error.response?.data?.message || 'Failed to create IOC')
     }
   }
 
@@ -84,38 +91,17 @@ export default function ThreatAnalysis() {
     }
   }
 
-  const getIOCTypeBadge = (type: IOCType) => {
-    const colors: Record<string, string> = {
-      IP_ADDRESS: 'bg-blue-100 text-blue-700',
-      DOMAIN: 'bg-purple-100 text-purple-700',
-      URL: 'bg-indigo-100 text-indigo-700',
-      FILE_HASH_MD5: 'bg-green-100 text-green-700',
-      FILE_HASH_SHA1: 'bg-green-100 text-green-700',
-      FILE_HASH_SHA256: 'bg-green-100 text-green-700',
-      EMAIL: 'bg-yellow-100 text-yellow-700',
-      CVE: 'bg-red-100 text-red-700',
-      REGISTRY_KEY: 'bg-gray-100 text-gray-700',
-      COMMAND_LINE: 'bg-pink-100 text-pink-700',
-    }
-    return (
-      <span className={`px-2 py-1 rounded text-xs font-medium ${colors[type] || 'bg-gray-100 text-gray-700'}`}>
-        {type.replace(/_/g, ' ')}
-      </span>
-    )
-  }
-
-  const getSeverityColor = (confidence: number) => {
-    if (confidence >= 0.8) return 'text-severity-critical'
-    if (confidence >= 0.6) return 'text-severity-high'
-    if (confidence >= 0.4) return 'text-severity-medium'
-    return 'text-severity-low'
-  }
+  const getIOCTypeBadge = (type: IOCType) => (
+    <span className={`px-2 py-1 rounded text-xs font-medium ${getIOCTypeBadgeClass(type)}`}>
+      {type.replace(/_/g, ' ')}
+    </span>
+  )
 
   if (loading) {
     return (
       <div>
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Threat Analysis</h1>
-        <div className="card">Loading...</div>
+        <LoadingSkeleton type="table" count={5} />
       </div>
     )
   }

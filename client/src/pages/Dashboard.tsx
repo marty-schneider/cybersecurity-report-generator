@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { projectService } from '../services/projectService'
 import { Project } from '../types'
+import LoadingSkeleton from '../components/LoadingSkeleton'
+import { getProjectStatusClass } from '../constants/badgeColors'
 
 export default function Dashboard() {
   const [projects, setProjects] = useState<Project[]>([])
@@ -34,8 +36,10 @@ export default function Dashboard() {
         iocsAnalyzed: iocsCount,
         criticalFindings: 0, // Would need to fetch findings to get this
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load dashboard:', error)
+      console.error('Error details:', error.response?.data || error.message)
+      setProjects([])
     } finally {
       setLoading(false)
     }
@@ -47,7 +51,7 @@ export default function Dashboard() {
     return (
       <div>
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Dashboard</h1>
-        <div className="card">Loading...</div>
+        <LoadingSkeleton type="card" count={4} />
       </div>
     )
   }
@@ -101,15 +105,7 @@ export default function Dashboard() {
                       <p className="text-sm text-gray-600">{project.clientName}</p>
                     </div>
                     <div className="text-right">
-                      <span
-                        className={`text-xs font-medium ${
-                          project.status === 'ACTIVE'
-                            ? 'text-green-600'
-                            : project.status === 'COMPLETED'
-                            ? 'text-blue-600'
-                            : 'text-gray-600'
-                        }`}
-                      >
+                      <span className={`text-xs font-medium ${getProjectStatusClass(project.status)}`}>
                         {project.status}
                       </span>
                       <p className="text-xs text-gray-500 mt-1">

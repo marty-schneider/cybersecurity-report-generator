@@ -29,8 +29,9 @@ export default function ProjectList() {
       setLoading(true)
       const data = await projectService.getAll()
       setProjects(data)
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to load projects:', err)
+      console.error('Error details:', err.response?.data || err.message)
     } finally {
       setLoading(false)
     }
@@ -56,7 +57,11 @@ export default function ProjectList() {
         endDate: '',
       })
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create project')
+      console.error('Failed to create project:', err)
+      console.error('Error response:', err.response?.data)
+      console.error('Error status:', err.response?.status)
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to create project'
+      setError(errorMessage)
     } finally {
       setCreating(false)
     }

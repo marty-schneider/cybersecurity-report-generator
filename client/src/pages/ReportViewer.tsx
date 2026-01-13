@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import DOMPurify from 'dompurify'
 import reportService from '../services/reportService'
 import Button from '../components/common/Button'
 
@@ -29,6 +30,7 @@ export default function ReportViewer() {
       setProjectName(projectId)
     } catch (err: any) {
       console.error('Failed to generate report:', err)
+      console.error('Error details:', err.response?.data || err.message)
       setError(err.response?.data?.message || 'Failed to generate report. Please try again.')
     } finally {
       setLoading(false)
@@ -163,7 +165,7 @@ export default function ReportViewer() {
 
       {/* Report Content */}
       <div className="report-container">
-        <div dangerouslySetInnerHTML={{ __html: reportHtml }} />
+        <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(reportHtml) }} />
       </div>
 
       {/* Print Styles */}
