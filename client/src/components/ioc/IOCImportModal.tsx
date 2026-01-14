@@ -2,10 +2,19 @@ import React, { useState } from 'react'
 import * as XLSX from 'xlsx'
 import Modal from '../common/Modal'
 import Button from '../common/Button'
-import iocService from '../../services/iocService'
-import aiMappingService, { ColumnMapping } from '../../services/aiMappingService'
+import { iocService } from '../../services/iocService'
+import { aiMappingService } from '../../services/aiMappingService'
 import { IOCType } from '../../types'
 import { MAX_IOC_IMPORT_SIZE, SUPPORTED_FILE_TYPES } from '../../config/constants'
+
+// Simple mapping interface for the modal state
+interface SimpleColumnMapping {
+  type?: string
+  value?: string
+  timestamp?: string
+  context?: string
+  source?: string
+}
 
 interface IOCImportModalProps {
   isOpen: boolean
@@ -21,7 +30,7 @@ export default function IOCImportModal({ isOpen, onClose, projectId, onSuccess }
   const [file, setFile] = useState<File | null>(null)
   const [parsedData, setParsedData] = useState<any[][]>([])
   const [headers, setHeaders] = useState<string[]>([])
-  const [columnMapping, setColumnMapping] = useState<ColumnMapping>({})
+  const [columnMapping, setColumnMapping] = useState<SimpleColumnMapping>({})
   const [error, setError] = useState<string | null>(null)
   const [importing, setImporting] = useState(false)
   const [importCount, setImportCount] = useState(0)
@@ -62,10 +71,22 @@ export default function IOCImportModal({ isOpen, onClose, projectId, onSuccess }
       setParsedData(rows)
 
       // Get AI mapping suggestions
-      const sampleRows = rows.slice(0, 5) // First 5 rows for analysis
+      const sampleRows = rows.slice(0, 5).map((row: any[]) => {
+        const obj: Record<string, any> = {}
+        fileHeaders.forEach((header, index) => {
+          obj[header] = row[index]
+        })
+        return obj
+      })
       const mappingResult = await aiMappingService.mapColumns(fileHeaders, sampleRows)
 
-      setColumnMapping(mappingResult.mapping)
+      // Convert AI mapping results to simple format
+      const simpleMapping: SimpleColumnMapping = {}
+      mappingResult.mappings.forEach((mapping) => {
+        simpleMapping[mapping.targetField] = mapping.sourceColumn
+      })
+
+      setColumnMapping(simpleMapping)
       setStage('mapping')
     } catch (err: any) {
       console.error('File parsing error:', err)
@@ -94,7 +115,7 @@ export default function IOCImportModal({ isOpen, onClose, projectId, onSuccess }
     })
   }
 
-  const handleMappingChange = (field: keyof ColumnMapping, value: string) => {
+  const handleMappingChange = (field: keyof SimpleColumnMapping, value: string) => {
     setColumnMapping({
       ...columnMapping,
       [field]: value || undefined,
@@ -289,8 +310,8 @@ export default function IOCImportModal({ isOpen, onClose, projectId, onSuccess }
                 )}
               </label>
               <select
-                value={columnMapping[field as keyof ColumnMapping] || ''}
-                onChange={(e) => handleMappingChange(field as keyof ColumnMapping, e.target.value)}
+                value={columnMapping[field as keyof SimpleColumnMapping] || ''}
+                onChange={(e) => handleMappingChange(field as keyof SimpleColumnMapping, e.target.value)}
                 className="w-full border border-gray-300 rounded px-3 py-2"
               >
                 <option value="">-- Not mapped --</option>
