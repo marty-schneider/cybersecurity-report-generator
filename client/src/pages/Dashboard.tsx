@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { projectService } from '../services/projectService'
 import { Project } from '../types'
 import LoadingSkeleton from '../components/LoadingSkeleton'
 import { getProjectStatusClass } from '../constants/badgeColors'
+import ProjectModal from '../components/project/ProjectModal'
 
 export default function Dashboard() {
+  const navigate = useNavigate()
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
+  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false)
   const [stats, setStats] = useState({
     activeProjects: 0,
     totalFindings: 0,
@@ -124,13 +127,14 @@ export default function Dashboard() {
       <div className="card">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link to="/projects">
-            <button className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary-400 hover:bg-primary-50 transition-colors text-left">
-              <div className="text-2xl mb-2">📁</div>
-              <h3 className="font-medium text-gray-900">New Project</h3>
-              <p className="text-sm text-gray-600">Start a new assessment</p>
-            </button>
-          </Link>
+          <button
+            className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary-400 hover:bg-primary-50 transition-colors text-left"
+            onClick={() => setIsNewProjectModalOpen(true)}
+          >
+            <div className="text-2xl mb-2">📁</div>
+            <h3 className="font-medium text-gray-900">New Project</h3>
+            <p className="text-sm text-gray-600">Start a new assessment</p>
+          </button>
 
           <Link to="/projects">
             <button className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary-400 hover:bg-primary-50 transition-colors text-left">
@@ -150,6 +154,15 @@ export default function Dashboard() {
           </button>
         </div>
       </div>
+
+      <ProjectModal
+        isOpen={isNewProjectModalOpen}
+        onClose={() => setIsNewProjectModalOpen(false)}
+        onSuccess={(project) => {
+          setIsNewProjectModalOpen(false)
+          navigate(`/projects/${project.id}`)
+        }}
+      />
     </div>
   )
 }

@@ -7,6 +7,7 @@ import { IOC, IOCType, TTPMapping } from '../types'
 import Modal from '../components/common/Modal'
 import Button from '../components/common/Button'
 import LoadingSkeleton from '../components/LoadingSkeleton'
+import IOCImportModal from '../components/ioc/IOCImportModal'
 import { getIOCTypeBadgeClass, getSeverityColor } from '../constants/badgeColors'
 
 export default function ThreatAnalysis() {
@@ -14,6 +15,7 @@ export default function ThreatAnalysis() {
   const { iocs, setIOCs, ttps, setTTPs, isAnalyzing, setAnalyzing } = useIOCStore()
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
   const [analysisResult, setAnalysisResult] = useState<any>(null)
 
   const [formData, setFormData] = useState({
@@ -112,6 +114,9 @@ export default function ThreatAnalysis() {
         <h1 className="text-3xl font-bold text-gray-900">Threat Analysis</h1>
         <div className="flex gap-3">
           <Button onClick={() => setIsModalOpen(true)}>+ Add IOC</Button>
+          <Button onClick={() => setIsImportModalOpen(true)} variant="secondary">
+            📄 Import from File
+          </Button>
           <Button
             onClick={handleAnalyze}
             disabled={isAnalyzing || iocs.length === 0}
@@ -301,6 +306,16 @@ export default function ThreatAnalysis() {
           </div>
         </form>
       </Modal>
+
+      {/* Import IOC Modal */}
+      <IOCImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        projectId={projectId || ''}
+        onSuccess={(count) => {
+          loadData() // Refresh the IOC list
+        }}
+      />
     </div>
   )
 }
