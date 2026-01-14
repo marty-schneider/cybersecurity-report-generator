@@ -7,6 +7,7 @@ import {
   bulkCreateIOCs,
   updateIOC,
   deleteIOC,
+  mapIOCColumns,
 } from '../controllers/iocController.js'
 
 const router = Router()
@@ -16,6 +17,7 @@ router.use(authenticate)
 router.get('/', getIOCs)
 router.post('/', createIOC)
 router.post('/bulk', bulkCreateIOCs)
+router.post('/map-columns', mapIOCColumns)
 router.get('/:id', getIOC)
 router.put('/:id', updateIOC)
 router.delete('/:id', deleteIOC)

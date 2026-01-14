@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express'
 import { AuthRequest } from '../middleware/auth.js'
 import { prisma } from '../utils/db.js'
 import { AppError } from '../middleware/errorHandler.js'
+import Anthropic from '@anthropic-ai/sdk'
 
 export const getIOCs = async (
   req: AuthRequest,
@@ -261,5 +262,126 @@ export const deleteIOC = async (
     res.json({ message: 'IOC deleted successfully' })
   } catch (error) {
     next(error)
+  }
+}
+
+export const mapIOCColumns = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { headers, sampleRows } = req.body
+
+    // Validate inputs
+    if (!headers || !Array.isArray(headers)) {
+      throw new AppError('Headers must be an array of strings', 400)
+    }
+
+    if (!sampleRows || !Array.isArray(sampleRows)) {
+      throw new AppError('Sample rows must be an array', 400)
+    }
+
+    if (headers.length === 0) {
+      throw new AppError('Headers array cannot be empty', 400)
+    }
+
+    // Validate headers are strings
+    if (!headers.every((h) => typeof h === 'string')) {
+      throw new AppError('All headers must be strings', 400)
+    }
+
+    // Initialize Anthropic client
+    const anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    })
+
+    // Format sample data for the prompt
+    const sampleDataText = sampleRows
+      .slice(0, 3)
+      .map((row, idx) => {
+        const rowData = headers
+          .map((header, colIdx) => `  ${header}: ${row[colIdx] ?? 'null'}`)
+          .join('\n')
+        return `Row ${idx + 1}:\n${rowData}`
+      })
+      .join('\n\n')
+
+    // Build the prompt for Claude
+    const prompt = `You are analyzing spreadsheet columns for IOC (Indicator of Compromise) import.
+
+Available columns: ${JSON.stringify(headers)}
+
+Sample data (first ${Math.min(sampleRows.length, 3)} rows):
+${sampleDataText}
+
+Map these columns to IOC fields:
+- type: IOC type (IP_ADDRESS, DOMAIN, URL, FILE_HASH, etc.)
+- value: The actual IOC value/indicator
+- timestamp: When the IOC was observed (date/time)
+- context: Optional context or description
+- source: Optional source information
+
+Return ONLY a JSON object with this structure:
+{
+  "mapping": {
+    "type": "column_name_or_null",
+    "value": "column_name_or_null",
+    "timestamp": "column_name_or_null",
+    "context": "column_name_or_null",
+    "source": "column_name_or_null"
+  },
+  "confidence": {
+    "type": 0.0,
+    "value": 0.0,
+    "timestamp": 0.0,
+    "context": 0.0,
+    "source": 0.0
+  }
+}
+
+Rules:
+- Set field to null if no appropriate column exists
+- Confidence scores should be between 0.0 and 1.0
+- Use actual column names from the headers array
+- Base your mapping on both column names and sample data content
+- Return ONLY the JSON object, no additional text`
+
+    // Call Claude API
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2048,
+      temperature: 0.2,
+      messages: [
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+    })
+
+    // Extract response text
+    const responseText = message.content[0].type === 'text' ? message.content[0].text : ''
+
+    // Parse JSON response
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/)
+    if (!jsonMatch) {
+      throw new Error('No valid JSON found in AI response')
+    }
+
+    const mappingResult = JSON.parse(jsonMatch[0])
+
+    // Validate the structure
+    if (!mappingResult.mapping || !mappingResult.confidence) {
+      throw new Error('Invalid mapping structure returned by AI')
+    }
+
+    res.json(mappingResult)
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      next(error)
+    } else {
+      next(new AppError(`Column mapping failed: ${error.message}`, 500))
+    }
   }
 }
