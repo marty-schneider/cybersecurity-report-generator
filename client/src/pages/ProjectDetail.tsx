@@ -7,6 +7,7 @@ import { Project, Finding, Severity } from '../types'
 import Button from '../components/common/Button'
 import Modal from '../components/common/Modal'
 import LoadingSkeleton from '../components/LoadingSkeleton'
+import IOCBasedFindingModal from '../components/findings/IOCBasedFindingModal'
 import { getSeverityBadgeClass, getStatusBadgeClass } from '../constants/badgeColors'
 
 export default function ProjectDetail() {
@@ -16,6 +17,7 @@ export default function ProjectDetail() {
   const [findings, setFindings] = useState<Finding[]>([])
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isIOCModalOpen, setIsIOCModalOpen] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -83,6 +85,11 @@ export default function ProjectDetail() {
       console.error('Error details:', error.response?.data || error.message)
       alert(error.response?.data?.message || 'Failed to create finding')
     }
+  }
+
+  const handleIOCFindingCreated = (finding: Finding) => {
+    setFindings([finding, ...findings])
+    setIsIOCModalOpen(false)
   }
 
   const getSeverityBadge = (severity: Severity) => (
@@ -169,7 +176,14 @@ export default function ProjectDetail() {
       <div className="card">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold text-gray-900">Findings</h2>
-          <Button onClick={() => setIsModalOpen(true)}>+ Add Finding</Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setIsIOCModalOpen(true)} variant="primary">
+              ✨ Quick Add from IOC
+            </Button>
+            <Button onClick={() => setIsModalOpen(true)} variant="secondary">
+              + Manual Entry
+            </Button>
+          </div>
         </div>
 
         {findings.length === 0 ? (
@@ -306,6 +320,14 @@ export default function ProjectDetail() {
           </div>
         </form>
       </Modal>
+
+      {/* IOC-Based Finding Modal */}
+      <IOCBasedFindingModal
+        isOpen={isIOCModalOpen}
+        onClose={() => setIsIOCModalOpen(false)}
+        projectId={id || ''}
+        onFindingCreated={handleIOCFindingCreated}
+      />
     </div>
   )
 }

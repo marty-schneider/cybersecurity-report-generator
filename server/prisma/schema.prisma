@@ -71,13 +71,18 @@ model Finding {
   description     String        @db.Text
   severity        Severity
   cvssScore       Float?
+  cveIdentifier   String?
   affectedSystems String[]
   evidence        String?       @db.Text
   remediation     String        @db.Text
   status          FindingStatus @default(NEW)
+  aiGenerated     Boolean       @default(false)
+  userModified    Boolean       @default(false)
 
   assignedTo      String?
   assignee        User?         @relation(fields: [assignedTo], references: [id])
+
+  linkedIOCs      IOCFinding[]
 
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -100,12 +105,27 @@ model IOC {
   source         String?
   enrichmentData Json?
 
+  linkedFindings IOCFinding[]
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   @@index([projectId, timestamp])
   @@index([type, value])
   @@map("iocs")
+}
+
+model IOCFinding {
+  id         String   @id @default(uuid())
+  iocId      String
+  ioc        IOC      @relation(fields: [iocId], references: [id], onDelete: Cascade)
+  findingId  String
+  finding    Finding  @relation(fields: [findingId], references: [id], onDelete: Cascade)
+  relevance  String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  @@unique([iocId, findingId])
+  @@map("ioc_findings")
 }
 
 model TTPMapping {
