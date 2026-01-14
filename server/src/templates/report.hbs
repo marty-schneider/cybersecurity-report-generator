@@ -31,7 +31,10 @@
             --color-low: #eab308;
             --color-info-severity: #3b82f6;
 
-            /* Maturity Colors */
+            /* Maturity Colors - Updated for consistency */
+            --color-maturity-foundational: #ef4444;
+            --color-maturity-developing: #f59e0b;
+            --color-maturity-mature: #10b981;
             --color-maturity-1: #dc2626;
             --color-maturity-2: #f59e0b;
             --color-maturity-3: #eab308;
@@ -118,164 +121,478 @@
         }
 
         /* ===========================
-           HEADER / COVER PAGE
+           HEADER / COVER PAGE - DARK HERO DESIGN
            =========================== */
         .report-header {
-            text-align: center;
-            padding: var(--spacing-3xl) 0;
-            margin-bottom: var(--spacing-3xl);
-            border-bottom: 4px solid var(--color-primary);
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: white;
+            padding: var(--spacing-3xl) var(--spacing-xl);
+            margin: calc(var(--spacing-xl) * -1) calc(var(--spacing-xl) * -1) var(--spacing-3xl);
             page-break-after: always;
+            position: relative;
+        }
+
+        .report-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.5;
+        }
+
+        .header-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: var(--spacing-sm);
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
         }
 
         .report-title {
-            font-size: 2.5rem;
+            font-size: 3.5rem;
             font-weight: 700;
-            color: var(--color-primary);
+            color: white;
             margin-bottom: var(--spacing-md);
+            line-height: 1.1;
+            position: relative;
+            z-index: 1;
         }
 
         .report-subtitle {
-            font-size: 1.5rem;
-            color: var(--color-gray-600);
-            margin-bottom: var(--spacing-xl);
+            font-size: 1.125rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: var(--spacing-sm);
+            position: relative;
+            z-index: 1;
         }
 
-        .report-meta {
-            display: flex;
-            justify-content: center;
-            gap: var(--spacing-xl);
-            flex-wrap: wrap;
-            margin-top: var(--spacing-xl);
-        }
-
-        .report-meta-item {
-            text-align: left;
-        }
-
-        .report-meta-label {
+        .report-date {
             font-size: 0.875rem;
-            color: var(--color-gray-500);
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: var(--spacing-2xl);
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-rating-box {
+            background: rgba(50, 50, 50, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: var(--spacing-xl);
+            margin: var(--spacing-2xl) 0;
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 1;
+        }
+
+        .rating-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: var(--spacing-sm);
             font-weight: 600;
+        }
+
+        .rating-value {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .rating-text {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #f59e0b;
+        }
+
+        .rating-indicator {
+            width: 6px;
+            height: 40px;
+            background: #f59e0b;
+            border-radius: 3px;
+        }
+
+        .rating-subtext {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+        }
+
+        .compliance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-md);
+            margin: var(--spacing-xl) 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .compliance-card {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 8px;
+            padding: var(--spacing-md);
+        }
+
+        .compliance-card.not-required {
+            background: rgba(100, 116, 139, 0.15);
+            border-color: rgba(100, 116, 139, 0.3);
+        }
+
+        .compliance-card-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .compliance-card-subtitle {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .compliance-status {
+            display: inline-block;
+            padding: var(--spacing-xs) var(--spacing-sm);
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
 
-        .report-meta-value {
-            font-size: 1.125rem;
-            color: var(--color-gray-900);
-            font-weight: 500;
+        .compliance-status.not-required {
+            background: rgba(100, 116, 139, 0.2);
+            color: #94a3b8;
         }
 
-        .report-classification {
-            display: inline-block;
+        .domains-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: var(--spacing-md);
             margin-top: var(--spacing-xl);
-            padding: var(--spacing-sm) var(--spacing-lg);
-            background: var(--color-danger);
+            position: relative;
+            z-index: 1;
+        }
+
+        .domain-card {
+            background: rgba(220, 38, 38, 0.15);
+            border: 1px solid rgba(220, 38, 38, 0.4);
+            border-radius: 8px;
+            padding: var(--spacing-md);
+        }
+
+        .domain-card.high {
+            background: rgba(234, 88, 12, 0.15);
+            border-color: rgba(234, 88, 12, 0.4);
+        }
+
+        .domain-card.medium {
+            background: rgba(245, 158, 11, 0.15);
+            border-color: rgba(245, 158, 11, 0.4);
+        }
+
+        .domain-card.low {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+
+        .domain-card-title {
+            font-size: 1rem;
+            font-weight: 700;
             color: white;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .domain-priority {
+            font-size: 0.75rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
-            border-radius: 4px;
+            letter-spacing: 0.05em;
+        }
+
+        .domain-priority.critical {
+            color: #f87171;
+        }
+
+        .domain-priority.high {
+            color: #fb923c;
+        }
+
+        .domain-priority.medium {
+            color: #fbbf24;
+        }
+
+        .domain-priority.low {
+            color: #34d399;
+        }
+
+        .hero-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: var(--spacing-2xl);
+            padding-top: var(--spacing-xl);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: var(--spacing-xl);
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+            line-height: 1;
+        }
+
+        .hero-stat-label {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: var(--spacing-xs);
         }
 
         /* ===========================
-           EXECUTIVE SUMMARY
+           EXECUTIVE SUMMARY - MODERN DESIGN
            =========================== */
-        .risk-headline {
-            background: linear-gradient(135deg, var(--color-danger) 0%, var(--color-warning) 100%);
-            color: white;
-            padding: var(--spacing-xl);
-            border-radius: 8px;
-            margin-bottom: var(--spacing-xl);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        .section-number {
+            font-size: 0.875rem;
+            color: var(--color-gray-400);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: var(--spacing-sm);
+            font-weight: 600;
         }
 
-        .risk-headline-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: var(--spacing-sm);
+        .risk-headline {
+            background: white;
+            border: 2px solid var(--color-gray-200);
+            border-left: 6px solid #f59e0b;
+            padding: var(--spacing-xl);
+            border-radius: 0;
+            margin: var(--spacing-2xl) 0;
+            font-style: italic;
         }
 
         .risk-headline-text {
-            font-size: 1.125rem;
-            line-height: 1.5;
+            font-size: 1.25rem;
+            line-height: 1.7;
+            color: var(--color-gray-800);
         }
 
-        .risk-positioning {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+        .risk-headline-text .risk-level {
+            color: #f59e0b;
+            font-weight: 700;
+            font-style: normal;
+            text-transform: uppercase;
+        }
+
+        .executive-box {
             background: var(--color-gray-50);
-            padding: var(--spacing-xl);
-            border-radius: 8px;
-            margin: var(--spacing-xl) 0;
             border: 1px solid var(--color-gray-200);
+            border-radius: 8px;
+            padding: var(--spacing-xl);
+            margin: var(--spacing-xl) 0;
         }
 
-        .risk-scale {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-sm);
+        .executive-box-title {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            color: var(--color-gray-500);
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            margin-bottom: var(--spacing-lg);
         }
 
-        .risk-scale-bar {
-            flex: 1;
-            height: 40px;
+        /* Financial Impact Positioning Diagram */
+        .financial-impact-diagram {
+            margin: var(--spacing-xl) 0;
+        }
+
+        .financial-impact-title {
+            font-weight: 600;
+            color: var(--color-gray-800);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .financial-impact-subtitle {
+            font-size: 0.875rem;
+            color: var(--color-gray-600);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .risk-positioning-bar {
+            position: relative;
+            height: 32px;
             display: flex;
             border-radius: 4px;
             overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: var(--spacing-lg);
         }
 
-        .risk-scale-segment {
+        .risk-segment {
             flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
             font-size: 0.75rem;
-            color: white;
             text-transform: uppercase;
+            color: white;
         }
 
-        .risk-scale-segment.critical {
-            background: var(--color-critical);
+        .risk-segment.low {
+            background: #10b981;
         }
 
-        .risk-scale-segment.high {
-            background: var(--color-high);
+        .risk-segment.medium {
+            background: #f59e0b;
         }
 
-        .risk-scale-segment.medium {
-            background: var(--color-medium);
+        .risk-segment.high {
+            background: #ef4444;
         }
 
-        .risk-scale-segment.low {
-            background: var(--color-low);
+        .company-indicator {
+            position: absolute;
+            top: -10px;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        .risk-scale-segment.minimal {
-            background: var(--color-success);
+        .company-indicator-label {
+            background: #1a1a1a;
+            color: white;
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            white-space: nowrap;
+            margin-bottom: 4px;
         }
 
-        .risk-indicator {
+        .company-indicator-arrow {
             width: 0;
             height: 0;
-            border-left: 15px solid transparent;
-            border-right: 15px solid transparent;
-            border-bottom: 20px solid var(--color-gray-900);
-            position: relative;
-            margin-top: -60px;
-            transition: margin-left 0.3s ease;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 8px solid #1a1a1a;
         }
 
-        .risk-label {
+        .risk-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--color-gray-600);
+        }
+
+        .risk-label-item {
             text-align: center;
-            margin-top: var(--spacing-md);
+            flex: 1;
+        }
+
+        .risk-label-title {
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .risk-label-desc {
+            font-size: 0.7rem;
+        }
+
+        /* Control Maturity Distribution Chart */
+        .maturity-distribution {
+            margin: var(--spacing-xl) 0;
+        }
+
+        .maturity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .maturity-title {
             font-weight: 600;
-            color: var(--color-gray-700);
+            color: var(--color-gray-800);
+        }
+
+        .maturity-count {
+            font-size: 0.875rem;
+            color: var(--color-gray-500);
+        }
+
+        .maturity-bar {
+            height: 48px;
+            display: flex;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .maturity-segment {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .maturity-segment.mature {
+            background: #10b981;
+        }
+
+        .maturity-segment.developing {
+            background: #f59e0b;
+        }
+
+        .maturity-segment.foundational {
+            background: #ef4444;
+        }
+
+        .maturity-legend {
+            display: flex;
+            gap: var(--spacing-lg);
+            flex-wrap: wrap;
+        }
+
+        .maturity-legend-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            font-size: 0.875rem;
+        }
+
+        .maturity-legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
         }
 
         .executive-overview {
@@ -446,7 +763,7 @@
             color: white;
         }
 
-        /* Maturity Level Badges */
+        /* Maturity Level Badges - Modern Style */
         .maturity-badge {
             display: inline-flex;
             align-items: center;
@@ -454,9 +771,33 @@
             padding: var(--spacing-xs) var(--spacing-md);
             border-radius: 4px;
             font-size: 0.875rem;
-            font-weight: 600;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
+        .maturity-badge.FOUNDATIONAL,
+        .maturity-badge.foundational {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .maturity-badge.DEVELOPING,
+        .maturity-badge.developing {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .maturity-badge.MATURE,
+        .maturity-badge.mature {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        /* Fallback for numeric levels */
         .maturity-badge.level-1 {
             background: rgba(220, 38, 38, 0.1);
             color: var(--color-maturity-1);
@@ -677,105 +1018,220 @@
         }
 
         /* ===========================
-           IMPLEMENTATION ROADMAP
+           IMPLEMENTATION ROADMAP - GANTT STYLE
            =========================== */
         .roadmap-container {
-            margin: var(--spacing-xl) 0;
+            margin: var(--spacing-2xl) 0;
         }
 
-        .timeline {
-            position: relative;
-            padding: var(--spacing-xl) 0;
-        }
-
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 30px;
-            top: 0;
-            bottom: 0;
-            width: 4px;
-            background: var(--color-gray-300);
-        }
-
-        .timeline-item {
-            position: relative;
-            padding-left: 70px;
-            margin-bottom: var(--spacing-2xl);
-            page-break-inside: avoid;
-        }
-
-        .timeline-marker {
-            position: absolute;
-            left: 16px;
-            top: 0;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: var(--color-primary);
-            border: 4px solid white;
-            box-shadow: 0 0 0 2px var(--color-primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: 0.875rem;
-            z-index: 1;
-        }
-
-        .timeline-content {
-            background: white;
-            border: 2px solid var(--color-gray-200);
-            border-radius: 8px;
-            padding: var(--spacing-lg);
-        }
-
-        .timeline-phase {
-            font-size: 0.875rem;
-            color: var(--color-primary);
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: var(--spacing-xs);
-        }
-
-        .timeline-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--color-gray-900);
-            margin-bottom: var(--spacing-md);
-        }
-
-        .timeline-activities {
-            list-style: none;
-            margin-top: var(--spacing-md);
-        }
-
-        .timeline-activities li {
-            padding: var(--spacing-sm) 0;
-            padding-left: var(--spacing-lg);
-            position: relative;
-            line-height: 1.6;
+        .roadmap-intro {
+            margin-bottom: var(--spacing-lg);
+            line-height: 1.7;
             color: var(--color-gray-700);
         }
 
-        .timeline-activities li::before {
-            content: '→';
-            position: absolute;
-            left: 0;
-            color: var(--color-primary);
-            font-weight: 700;
+        .roadmap-legend {
+            display: flex;
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+            flex-wrap: wrap;
         }
 
-        .timeline-duration {
-            display: inline-block;
-            margin-top: var(--spacing-md);
-            padding: var(--spacing-xs) var(--spacing-md);
-            background: var(--color-gray-100);
-            border-radius: 4px;
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
             font-size: 0.875rem;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .legend-color.immediate {
+            background: #ef4444;
+        }
+
+        .legend-color.foundation {
+            background: #f59e0b;
+        }
+
+        .legend-color.strategic {
+            background: #10b981;
+        }
+
+        .legend-color.quick-win {
+            background: #fbbf24;
+        }
+
+        /* Gantt Chart Table */
+        .gantt-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: var(--spacing-xl) 0;
+            border: 1px solid var(--color-gray-200);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .gantt-table thead {
+            background: var(--color-gray-100);
+        }
+
+        .gantt-table thead th {
+            padding: var(--spacing-md);
+            text-align: left;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--color-gray-700);
+            border-bottom: 2px solid var(--color-gray-300);
+        }
+
+        .gantt-table thead th.quarter {
+            text-align: center;
+            font-size: 0.875rem;
+        }
+
+        .gantt-table thead th.month {
+            text-align: center;
+            font-size: 0.7rem;
             font-weight: 600;
+            padding: var(--spacing-sm);
+            border-left: 1px solid var(--color-gray-200);
+        }
+
+        .gantt-table tbody td {
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--color-gray-200);
+            vertical-align: middle;
+        }
+
+        .gantt-table tbody td.month-cell {
+            border-left: 1px solid var(--color-gray-200);
+            padding: 0;
+            position: relative;
+        }
+
+        .gantt-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .gantt-bar-container {
+            height: 40px;
+            padding: var(--spacing-xs);
+            display: flex;
+            align-items: center;
+        }
+
+        .gantt-bar {
+            height: 32px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            padding: 0 var(--spacing-sm);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .gantt-bar.immediate {
+            background: #ef4444;
+        }
+
+        .gantt-bar.foundation {
+            background: #f59e0b;
+        }
+
+        .gantt-bar.strategic {
+            background: #10b981;
+        }
+
+        .gantt-bar.quick-win {
+            background: #fbbf24;
+        }
+
+        .recommendation-name {
+            font-weight: 600;
+            color: var(--color-gray-900);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .quick-win-star {
+            color: #fbbf24;
+            font-size: 1.125rem;
+        }
+
+        /* Milestone Cards */
+        .milestone-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-2xl);
+        }
+
+        .milestone-card {
+            border-radius: 8px;
+            padding: var(--spacing-lg);
+            border-left: 4px solid;
+        }
+
+        .milestone-card.month-1 {
+            background: rgba(239, 68, 68, 0.05);
+            border-color: #ef4444;
+        }
+
+        .milestone-card.month-5 {
+            background: rgba(245, 158, 11, 0.05);
+            border-color: #f59e0b;
+        }
+
+        .milestone-card.month-12 {
+            background: rgba(16, 185, 129, 0.05);
+            border-color: #10b981;
+        }
+
+        .milestone-header {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .milestone-icon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .milestone-icon.month-1 {
+            background: #ef4444;
+        }
+
+        .milestone-icon.month-5 {
+            background: #f59e0b;
+        }
+
+        .milestone-icon.month-12 {
+            background: #10b981;
+        }
+
+        .milestone-title {
+            font-size: 0.875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--color-gray-900);
+        }
+
+        .milestone-content {
+            font-size: 0.875rem;
+            line-height: 1.6;
             color: var(--color-gray-700);
         }
 
@@ -1017,65 +1473,179 @@
 <body>
     <div class="page">
         <!-- ===========================
-             REPORT HEADER / COVER PAGE
+             REPORT HEADER - DARK HERO DESIGN
              =========================== -->
         <header class="report-header">
-            <h1 class="report-title">Security Assessment Report</h1>
-            <h2 class="report-subtitle">{{project.name}}</h2>
+            <div class="header-label">CYBER SECURITY ASSESSMENT</div>
+            <h1 class="report-title">Posture Assessment</h1>
+            <h2 class="report-subtitle">Prepared for {{project.clientName}}</h2>
+            <div class="report-date">{{formatDate reportDate}}</div>
 
-            <div class="report-meta">
-                <div class="report-meta-item">
-                    <div class="report-meta-label">Client</div>
-                    <div class="report-meta-value">{{project.clientName}}</div>
+            <!-- Overall Rating Box -->
+            <div class="hero-rating-box">
+                <div class="rating-label">OVERALL RATING</div>
+                <div class="rating-value">
+                    <span class="rating-text">{{executiveSummary.riskLevel}}</span>
+                    <span class="rating-indicator"></span>
                 </div>
-                <div class="report-meta-item">
-                    <div class="report-meta-label">Assessment Type</div>
-                    <div class="report-meta-value">{{project.assessmentType}}</div>
-                </div>
-                <div class="report-meta-item">
-                    <div class="report-meta-label">Report Date</div>
-                    <div class="report-meta-value">{{reportDate}}</div>
-                </div>
-                <div class="report-meta-item">
-                    <div class="report-meta-label">Assessment Period</div>
-                    <div class="report-meta-value">{{project.startDate}} - {{project.endDate}}</div>
+                <p class="rating-subtext">{{riskAssessment.riskRating}}</p>
+            </div>
+
+            <!-- Compliance Overview -->
+            <div style="position: relative; z-index: 1;">
+                <div class="rating-label" style="margin-bottom: var(--spacing-md);">COMPLIANCE OVERVIEW</div>
+                <div class="compliance-grid">
+                    <div class="compliance-card">
+                        <div class="compliance-card-title">Cyber Essentials</div>
+                        <div class="compliance-card-subtitle">UK</div>
+                        <span class="compliance-status">READY</span>
+                    </div>
+                    <div class="compliance-card not-required">
+                        <div class="compliance-card-title">DORA</div>
+                        <div class="compliance-card-subtitle">Digital Operational Resilience Act EU</div>
+                        <span class="compliance-status not-required">NOT REQUIRED</span>
+                    </div>
+                    <div class="compliance-card not-required">
+                        <div class="compliance-card-title">NIS2</div>
+                        <div class="compliance-card-subtitle">Network and Information Security Directive 2EU</div>
+                        <span class="compliance-status not-required">NOT REQUIRED</span>
+                    </div>
                 </div>
             </div>
 
-            {{#if classification}}
-            <div class="report-classification">{{classification}}</div>
-            {{/if}}
+            <!-- Assessment Domains -->
+            <div style="position: relative; z-index: 1;">
+                <div class="rating-label" style="margin-bottom: var(--spacing-md);">ASSESSMENT DOMAINS</div>
+                <div class="domains-grid">
+                    {{#each controlDomains}}
+                    <div class="domain-card {{#eq this.overallMaturity 'FOUNDATIONAL'}}critical{{/eq}}{{#eq this.overallMaturity 'DEVELOPING'}}medium{{/eq}}{{#eq this.overallMaturity 'MATURE'}}low{{/eq}}">
+                        <div class="domain-card-title">{{this.domainName}}</div>
+                        <div class="domain-priority {{#eq this.overallMaturity 'FOUNDATIONAL'}}critical{{/eq}}{{#eq this.overallMaturity 'DEVELOPING'}}medium{{/eq}}{{#eq this.overallMaturity 'MATURE'}}low{{/eq}}">
+                            {{#eq this.overallMaturity 'FOUNDATIONAL'}}HIGH PRIORITY ISSUES{{/eq}}
+                            {{#eq this.overallMaturity 'DEVELOPING'}}MEDIUM PRIORITY ISSUES{{/eq}}
+                            {{#eq this.overallMaturity 'MATURE'}}LOW PRIORITY ISSUES{{/eq}}
+                        </div>
+                    </div>
+                    {{/each}}
+                </div>
+            </div>
+
+            <!-- Footer Stats -->
+            <div class="hero-footer">
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <div class="hero-stat-value">{{statistics.findings.total}}</div>
+                        <div class="hero-stat-label">recommendations</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-value">{{#if quickWins}}{{quickWins.length}}{{else}}0{{/if}}</div>
+                        <div class="hero-stat-label">quick win</div>
+                    </div>
+                </div>
+            </div>
         </header>
 
         <!-- ===========================
-             1. EXECUTIVE SUMMARY
+             2. EXECUTIVE SUMMARY
              =========================== -->
         <section class="section">
+            <div class="section-number">Section 02</div>
             <div class="section-header">
                 <h2 class="section-title">Executive Summary</h2>
             </div>
 
-            <!-- Risk Headline -->
+            <!-- Risk Headline - Bordered Quote -->
             <div class="risk-headline">
-                <h3 class="risk-headline-title">{{executiveSummary.riskHeadline.title}}</h3>
-                <p class="risk-headline-text">{{executiveSummary.riskHeadline.message}}</p>
+                <p class="risk-headline-text">We assess that {{project.clientName}} represents a <span class="risk-level">{{executiveSummary.riskLevel}} risk</span> of experiencing a major financial loss event due to a cyber security incident.</p>
             </div>
 
-            <!-- Risk Positioning Indicator -->
-            <div class="risk-positioning">
-                <div style="flex: 1;">
-                    <h4 style="margin-bottom: var(--spacing-md); color: var(--color-gray-700);">Overall Risk Level</h4>
-                    <div class="risk-scale">
-                        <div class="risk-scale-bar">
-                            <div class="risk-scale-segment critical">Critical</div>
-                            <div class="risk-scale-segment high">High</div>
-                            <div class="risk-scale-segment medium">Medium</div>
-                            <div class="risk-scale-segment low">Low</div>
-                            <div class="risk-scale-segment minimal">Minimal</div>
+            <!-- Overview Text -->
+            <div class="executive-overview">
+                {{#each executiveSummary.overview}}
+                <p>{{this}}</p>
+                {{/each}}
+            </div>
+
+            <!-- Financial Impact Positioning Diagram -->
+            <div class="executive-box">
+                <div class="executive-box-title">EXECUTIVE OVERVIEW</div>
+
+                <div class="financial-impact-diagram">
+                    <h3 class="financial-impact-title">Financial Impact from a Major Cyber Incident</h3>
+                    <p class="financial-impact-subtitle">The diagram below illustrates the likely severity of a major incident, were one to occur, in comparison to your industry peers.</p>
+
+                    <div style="position: relative; padding-top: 40px;">
+                        <div class="risk-positioning-bar">
+                            <div class="risk-segment low">LOW</div>
+                            <div class="risk-segment medium">MEDIUM</div>
+                            <div class="risk-segment high">HIGH</div>
+                        </div>
+
+                        <div class="company-indicator" style="left: {{executiveSummary.riskPosition}}%;">
+                            <div class="company-indicator-label">INDUSTRY PEERS</div>
+                            <div class="company-indicator-arrow"></div>
+                        </div>
+                        <div class="company-indicator" style="left: {{executiveSummary.riskPosition}}%;">
+                            <div class="company-indicator-label">{{project.clientName}}</div>
+                            <div class="company-indicator-arrow"></div>
                         </div>
                     </div>
-                    <div class="risk-indicator" style="margin-left: {{executiveSummary.riskPosition}}%;"></div>
-                    <div class="risk-label">Current Risk: {{executiveSummary.riskLevel}}</div>
+
+                    <div class="risk-labels">
+                        <div class="risk-label-item">
+                            <div class="risk-label-title">LOW</div>
+                            <div class="risk-label-desc">Short-term cashflow impact</div>
+                        </div>
+                        <div class="risk-label-item">
+                            <div class="risk-label-title">MEDIUM</div>
+                            <div class="risk-label-desc">Significant but recoverable losses</div>
+                        </div>
+                        <div class="risk-label-item">
+                            <div class="risk-label-title">HIGH</div>
+                            <div class="risk-label-desc">Potential insolvency risk</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Control Maturity Distribution Chart -->
+                <div class="maturity-distribution">
+                    <div class="maturity-header">
+                        <div class="maturity-title">Control Maturity Distribution</div>
+                        <div class="maturity-count">{{maturityDistribution.total}} controls assessed</div>
+                    </div>
+
+                    <div class="maturity-bar">
+                        {{#if maturityDistribution.mature}}
+                        <div class="maturity-segment mature" style="flex: {{maturityDistribution.mature}};">
+                            {{maturityDistribution.mature}}
+                        </div>
+                        {{/if}}
+                        {{#if maturityDistribution.developing}}
+                        <div class="maturity-segment developing" style="flex: {{maturityDistribution.developing}};">
+                            {{maturityDistribution.developing}}
+                        </div>
+                        {{/if}}
+                        {{#if maturityDistribution.foundational}}
+                        <div class="maturity-segment foundational" style="flex: {{maturityDistribution.foundational}};">
+                            {{maturityDistribution.foundational}}
+                        </div>
+                        {{/if}}
+                    </div>
+
+                    <div class="maturity-legend">
+                        <div class="maturity-legend-item">
+                            <span class="maturity-legend-color" style="background: #10b981;"></span>
+                            <span>Mature</span>
+                        </div>
+                        <div class="maturity-legend-item">
+                            <span class="maturity-legend-color" style="background: #f59e0b;"></span>
+                            <span>Developing</span>
+                        </div>
+                        <div class="maturity-legend-item">
+                            <span class="maturity-legend-color" style="background: #ef4444;"></span>
+                            <span>Foundational</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1124,12 +1694,21 @@
         </section>
 
         <!-- ===========================
-             2. CONTROL ASSESSMENTS
+             3. KEY FINDINGS - CONTROL ASSESSMENTS
              =========================== -->
         <section class="section">
+            <div class="section-number">Section 03</div>
             <div class="section-header">
-                <h2 class="section-title">Control Assessment Summary</h2>
+                <h2 class="section-title">Key Findings</h2>
             </div>
+
+            <h3 class="subsection-title">3.1 Compliance Overview</h3>
+            <p style="margin-bottom: var(--spacing-lg);">Based on the control assessments detailed in this report, we have provided an indicative view of {{project.clientName}}'s likely alignment with key regulatory frameworks and certification schemes.</p>
+
+            <!-- Simplified for now - this can be expanded with actual compliance data -->
+
+            <h3 class="subsection-title" style="margin-top: var(--spacing-2xl);">3.2 Control Assessments</h3>
+            <p style="margin-bottom: var(--spacing-lg);">The following table summarises our assessment of key controls across each domain, along with their current maturity rating.</p>
 
             <div class="table-container">
                 <table>
@@ -1177,11 +1756,12 @@
         </section>
 
         <!-- ===========================
-             3. DETAILED CONTROL DOMAIN SECTIONS
+             5. DETAILED CONTROL DOMAIN SECTIONS
              =========================== -->
         <section class="section">
+            <div class="section-number">Section 05</div>
             <div class="section-header">
-                <h2 class="section-title">Detailed Control Analysis</h2>
+                <h2 class="section-title">Security Operations</h2>
             </div>
 
             {{#each controlDomains}}
@@ -1351,73 +1931,139 @@
         </section>
 
         <!-- ===========================
-             5. IMPLEMENTATION ROADMAP
+             4.1 IMPLEMENTATION ROADMAP - GANTT CHART
              =========================== -->
         <section class="section">
+            <div class="section-number">Section 04</div>
             <div class="section-header">
-                <h2 class="section-title">Implementation Roadmap</h2>
+                <h2 class="section-title">4.1 Implementation Roadmap</h2>
             </div>
 
-            <p class="mb-lg">This roadmap provides a phased approach to implementing the recommendations. Each phase includes specific activities, deliverables, and expected outcomes.</p>
+            <p class="roadmap-intro">The following roadmap illustrates a suggested implementation timeline based on priority, effort, and logical dependencies between recommendations.</p>
 
-            <div class="roadmap-container">
-                <div class="timeline">
-                    {{#each roadmapPhases}}
-                    <div class="timeline-item">
-                        <div class="timeline-marker">{{this.phaseNumber}}</div>
-                        <div class="timeline-content">
-                            <div class="timeline-phase">Phase {{this.phaseNumber}}</div>
-                            <h3 class="timeline-title">{{this.title}}</h3>
-                            <p class="text-muted mb-md">{{this.description}}</p>
+            <!-- Legend -->
+            <div class="roadmap-legend">
+                <div class="legend-item">
+                    <span class="legend-color immediate"></span>
+                    <span>Immediate Actions</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color foundation"></span>
+                    <span>Foundation Building</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color strategic"></span>
+                    <span>Strategic Implementation</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color quick-win"></span>
+                    <span>★ Quick Win</span>
+                </div>
+            </div>
 
-                            {{#if this.activities}}
-                            <div>
-                                <strong class="text-small" style="color: var(--color-gray-700);">KEY ACTIVITIES:</strong>
-                                <ul class="timeline-activities">
-                                    {{#each this.activities}}
-                                    <li>{{this}}</li>
-                                    {{/each}}
-                                </ul>
+            <!-- Gantt Chart -->
+            <table class="gantt-table">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">RECOMMENDATION</th>
+                        <th colspan="3" class="quarter">Q1</th>
+                        <th colspan="3" class="quarter">Q2</th>
+                        <th colspan="3" class="quarter">Q3</th>
+                        <th colspan="3" class="quarter">Q4</th>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <th class="month">M1</th>
+                        <th class="month">M2</th>
+                        <th class="month">M3</th>
+                        <th class="month">M4</th>
+                        <th class="month">M5</th>
+                        <th class="month">M6</th>
+                        <th class="month">M7</th>
+                        <th class="month">M8</th>
+                        <th class="month">M9</th>
+                        <th class="month">M10</th>
+                        <th class="month">M11</th>
+                        <th class="month">M12</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each recommendations}}
+                    <tr>
+                        <td>
+                            <div class="recommendation-name">
+                                {{#if this.isQuickWin}}<span class="quick-win-star">★</span>{{/if}}
+                                {{this.title}}
                             </div>
-                            {{/if}}
-
-                            {{#if this.deliverables}}
-                            <div class="mt-md">
-                                <strong class="text-small" style="color: var(--color-gray-700);">DELIVERABLES:</strong>
-                                <ul class="timeline-activities">
-                                    {{#each this.deliverables}}
-                                    <li>{{this}}</li>
-                                    {{/each}}
-                                </ul>
+                        </td>
+                        {{#if (eq this.priority 'IMMEDIATE')}}
+                        <td colspan="2" class="month-cell">
+                            <div class="gantt-bar-container">
+                                <div class="gantt-bar immediate" style="width: 100%;"></div>
                             </div>
-                            {{/if}}
-
-                            <div class="flex flex-gap mt-md">
-                                <span class="timeline-duration">Duration: {{this.duration}}</span>
-                                {{#if this.dependencies}}
-                                <span class="text-small text-muted">Dependencies: {{this.dependencies}}</span>
-                                {{/if}}
+                        </td>
+                        <td colspan="10" class="month-cell"></td>
+                        {{else if (eq this.priority 'HIGH')}}
+                        <td colspan="2" class="month-cell"></td>
+                        <td colspan="4" class="month-cell">
+                            <div class="gantt-bar-container">
+                                <div class="gantt-bar foundation" style="width: 100%;"></div>
                             </div>
-                        </div>
-                    </div>
+                        </td>
+                        <td colspan="6" class="month-cell"></td>
+                        {{else if (eq this.priority 'MEDIUM')}}
+                        <td colspan="6" class="month-cell"></td>
+                        <td colspan="4" class="month-cell">
+                            <div class="gantt-bar-container">
+                                <div class="gantt-bar strategic" style="width: 100%;"></div>
+                            </div>
+                        </td>
+                        <td colspan="2" class="month-cell"></td>
+                        {{else}}
+                        <td colspan="9" class="month-cell"></td>
+                        <td colspan="3" class="month-cell">
+                            <div class="gantt-bar-container">
+                                <div class="gantt-bar strategic" style="width: 100%;"></div>
+                            </div>
+                        </td>
+                        {{/if}}
+                    </tr>
                     {{/each}}
-                </div>
-            </div>
+                </tbody>
+            </table>
 
-            <!-- Roadmap Summary -->
-            {{#if roadmapSummary}}
-            <div class="alert alert-info">
-                <div class="alert-title">Roadmap Summary</div>
-                <div style="line-height: 1.7;">
-                    {{roadmapSummary.text}}
-                    {{#if roadmapSummary.totalDuration}}
-                    <br><br>
-                    <strong>Total Estimated Duration:</strong> {{roadmapSummary.totalDuration}}<br>
-                    <strong>Total Estimated Cost:</strong> {{roadmapSummary.totalCost}}
-                    {{/if}}
+            <!-- Milestone Cards -->
+            <div class="milestone-cards">
+                <div class="milestone-card month-1">
+                    <div class="milestone-header">
+                        <span class="milestone-icon month-1"></span>
+                        <span class="milestone-title">Month 1 Milestone</span>
+                    </div>
+                    <div class="milestone-content">
+                        {{roadmap.phases.0.name}}: {{roadmap.phases.0.description}}
+                    </div>
+                </div>
+
+                <div class="milestone-card month-5">
+                    <div class="milestone-header">
+                        <span class="milestone-icon month-5"></span>
+                        <span class="milestone-title">Month 5 Milestone</span>
+                    </div>
+                    <div class="milestone-content">
+                        {{#if roadmap.phases.1}}{{roadmap.phases.1.name}}: {{roadmap.phases.1.description}}{{/if}}
+                    </div>
+                </div>
+
+                <div class="milestone-card month-12">
+                    <div class="milestone-header">
+                        <span class="milestone-icon month-12"></span>
+                        <span class="milestone-title">Month 12 Milestone</span>
+                    </div>
+                    <div class="milestone-content">
+                        {{#if roadmap.phases.2}}{{roadmap.phases.2.name}}: {{roadmap.phases.2.description}}{{/if}}
+                    </div>
                 </div>
             </div>
-            {{/if}}
         </section>
 
         <!-- ===========================
