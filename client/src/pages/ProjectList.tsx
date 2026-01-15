@@ -73,12 +73,14 @@ export default function ProjectList() {
       VULN_ASSESSMENT: 'bg-blue-100 text-blue-700',
       SECURITY_AUDIT: 'bg-green-100 text-green-700',
       RED_TEAM: 'bg-red-100 text-red-700',
+      INCIDENT_RESPONSE: 'bg-orange-100 text-orange-700',
     }
     const labels = {
       PENTEST: 'Penetration Test',
       VULN_ASSESSMENT: 'Vulnerability Assessment',
       SECURITY_AUDIT: 'Security Audit',
       RED_TEAM: 'Red Team',
+      INCIDENT_RESPONSE: 'Incident Response',
     }
     return (
       <span className={`px-2 py-1 rounded text-xs font-medium ${colors[type]}`}>
@@ -180,6 +182,7 @@ export default function ProjectList() {
               <option value="VULN_ASSESSMENT">Vulnerability Assessment</option>
               <option value="SECURITY_AUDIT">Security Audit</option>
               <option value="RED_TEAM">Red Team</option>
+              <option value="INCIDENT_RESPONSE">Incident Response</option>
             </select>
           </div>
 

@@ -168,6 +168,7 @@ enum AssessmentType {
   VULN_ASSESSMENT
   SECURITY_AUDIT
   RED_TEAM
+  INCIDENT_RESPONSE
 }
 
 enum ProjectStatus {

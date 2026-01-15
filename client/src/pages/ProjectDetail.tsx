@@ -279,6 +279,8 @@ export default function ProjectDetail() {
     )
   }
 
+  const isIncidentResponse = currentProject.assessmentType === 'INCIDENT_RESPONSE'
+
   return (
     <div>
       {/* Header */}
@@ -287,6 +289,9 @@ export default function ProjectDetail() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">{currentProject.name}</h1>
             <p className="text-gray-600">Client: {currentProject.clientName}</p>
+            {isIncidentResponse && (
+              <p className="text-sm text-orange-600 mt-1">🚨 Incident Response Investigation</p>
+            )}
           </div>
           <div className="flex gap-3">
             <Link to={`/projects/${id}/threat-analysis`}>
@@ -300,7 +305,7 @@ export default function ProjectDetail() {
         </div>
 
         {/* Project Info Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className={`grid grid-cols-1 gap-4 ${isIncidentResponse ? 'md:grid-cols-4' : 'md:grid-cols-5'}`}>
           <div className="card">
             <p className="text-sm text-gray-600 mb-1">Assessment Type</p>
             <p className="text-lg font-semibold text-gray-900">
@@ -312,15 +317,17 @@ export default function ProjectDetail() {
             <p className="text-lg font-semibold text-gray-900">{currentProject.status}</p>
           </div>
           <div className="card">
-            <p className="text-sm text-gray-600 mb-1">Start Date</p>
+            <p className="text-sm text-gray-600 mb-1">{isIncidentResponse ? 'Incident Date' : 'Start Date'}</p>
             <p className="text-lg font-semibold text-gray-900">
               {new Date(currentProject.startDate).toLocaleDateString()}
             </p>
           </div>
-          <div className="card">
-            <p className="text-sm text-gray-600 mb-1">Findings</p>
-            <p className="text-lg font-semibold text-gray-900">{findings.length}</p>
-          </div>
+          {!isIncidentResponse && (
+            <div className="card">
+              <p className="text-sm text-gray-600 mb-1">Findings</p>
+              <p className="text-lg font-semibold text-gray-900">{findings.length}</p>
+            </div>
+          )}
           <div className="card">
             <p className="text-sm text-gray-600 mb-1">IOCs</p>
             <p className="text-lg font-semibold text-gray-900">{iocs.length}</p>
@@ -328,7 +335,91 @@ export default function ProjectDetail() {
         </div>
       </div>
 
-      {/* Findings Section */}
+      {/* IOC Section - Show first for Incident Response */}
+      {isIncidentResponse && (
+        <div className="card mb-8">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Incident Timeline & Indicators</h2>
+              <p className="text-sm text-gray-600 mt-1">Document evidence and indicators from the incident</p>
+            </div>
+            <div className="flex gap-3">
+              <Button onClick={handleAddNewIOC} variant="primary">+ Add IOC</Button>
+              <Button onClick={() => setIsImportModalOpen(true)} variant="secondary">
+                📄 Import from File
+              </Button>
+              {iocs.length > 0 && (
+                <Button
+                  onClick={handleAnalyzeIOCs}
+                  disabled={isAnalyzing}
+                  variant="primary"
+                >
+                  {isAnalyzing ? 'Analyzing...' : '🤖 Analyze Incident'}
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {iocs.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-600 mb-4">No indicators documented yet. Start by adding IOCs from the incident.</p>
+              <div className="flex gap-3 justify-center">
+                <Button onClick={handleAddNewIOC} variant="primary">+ Add First IOC</Button>
+                <Button onClick={() => setIsImportModalOpen(true)} variant="secondary">
+                  📄 Import from File
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {iocs.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()).map((ioc) => (
+                <div key={ioc.id} className="border-l-4 border-orange-500 pl-4 py-2 hover:bg-gray-50 transition-colors">
+                  <div className="flex justify-between items-start mb-1">
+                    <div className="flex items-center gap-2 flex-1">
+                      <span className="text-xs font-semibold text-orange-600 min-w-[140px]">
+                        {new Date(ioc.timestamp).toLocaleString()}
+                      </span>
+                      {getIOCTypeBadge(ioc.type)}
+                      <span className="font-mono text-sm text-gray-900">{ioc.value}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleEditIOC(ioc)}
+                        className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1"
+                        title="Edit IOC"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => handleDeleteIOC(ioc)}
+                        className="text-red-600 hover:text-red-800 text-xs px-2 py-1"
+                        title="Delete IOC"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+                  {ioc.context && <p className="text-sm text-gray-600 mt-1 ml-[140px]">{ioc.context}</p>}
+                  {ioc.source && <p className="text-xs text-gray-500 mt-1 ml-[140px]">Source: {ioc.source}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {iocs.length > 0 && (
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <Link to={`/projects/${id}/threat-analysis`}>
+                <Button variant="secondary" className="w-full">
+                  🔍 View Detailed Incident Analysis & Attack Chain →
+                </Button>
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Findings Section - Only show for non-IR projects */}
+      {!isIncidentResponse && (
       <div className="card">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold text-gray-900">Findings</h2>
@@ -382,8 +473,10 @@ export default function ProjectDetail() {
           </div>
         )}
       </div>
+      )}
 
-      {/* IOC Section */}
+      {/* IOC Section - For non-IR projects, show after Findings */}
+      {!isIncidentResponse && (
       <div className="card mt-8">
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -463,8 +556,10 @@ export default function ProjectDetail() {
           </div>
         )}
       </div>
+      )}
 
-      {/* Add/Edit Finding Modal */}
+      {/* Add/Edit Finding Modal - Only for non-IR projects */}
+      {!isIncidentResponse && (
       <Modal
         isOpen={isModalOpen}
         onClose={() => {
@@ -578,6 +673,7 @@ export default function ProjectDetail() {
           </div>
         </form>
       </Modal>
+      )}
 
       {/* Add/Edit IOC Modal */}
       <Modal
