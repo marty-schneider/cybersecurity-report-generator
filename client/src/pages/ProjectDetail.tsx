@@ -16,6 +16,7 @@ export default function ProjectDetail() {
   const [findings, setFindings] = useState<Finding[]>([])
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingFinding, setEditingFinding] = useState<Finding | null>(null)
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -52,13 +53,12 @@ export default function ProjectDetail() {
     }
   }
 
-  const handleCreateFinding = async (e: React.FormEvent) => {
+  const handleSubmitFinding = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!id) return
 
     try {
-      const newFinding = await findingService.create({
-        projectId: id,
+      const findingData = {
         title: formData.title,
         description: formData.description,
         severity: formData.severity,
@@ -66,9 +66,23 @@ export default function ProjectDetail() {
         affectedSystems: formData.affectedSystems.split(',').map((s) => s.trim()).filter(Boolean),
         evidence: formData.evidence || undefined,
         remediation: formData.remediation,
-      })
-      setFindings([newFinding, ...findings])
+      }
+
+      if (editingFinding) {
+        // Update existing finding
+        const updatedFinding = await findingService.update(editingFinding.id, findingData)
+        setFindings(findings.map(f => f.id === editingFinding.id ? updatedFinding : f))
+      } else {
+        // Create new finding
+        const newFinding = await findingService.create({
+          projectId: id,
+          ...findingData,
+        })
+        setFindings([newFinding, ...findings])
+      }
+
       setIsModalOpen(false)
+      setEditingFinding(null)
       setFormData({
         title: '',
         description: '',
@@ -79,10 +93,50 @@ export default function ProjectDetail() {
         remediation: '',
       })
     } catch (error: any) {
-      console.error('Failed to create finding:', error)
+      console.error(`Failed to ${editingFinding ? 'update' : 'create'} finding:`, error)
       console.error('Error details:', error.response?.data || error.message)
-      alert(error.response?.data?.message || 'Failed to create finding')
+      alert(error.response?.data?.message || `Failed to ${editingFinding ? 'update' : 'create'} finding`)
     }
+  }
+
+  const handleEditFinding = (finding: Finding) => {
+    setEditingFinding(finding)
+    setFormData({
+      title: finding.title,
+      description: finding.description,
+      severity: finding.severity,
+      cvssScore: finding.cvssScore?.toString() || '',
+      affectedSystems: finding.affectedSystems.join(', '),
+      evidence: finding.evidence || '',
+      remediation: finding.remediation,
+    })
+    setIsModalOpen(true)
+  }
+
+  const handleDeleteFinding = async (finding: Finding) => {
+    if (!confirm(`Are you sure you want to delete the finding "${finding.title}"?`)) return
+
+    try {
+      await findingService.delete(finding.id)
+      setFindings(findings.filter(f => f.id !== finding.id))
+    } catch (error: any) {
+      console.error('Failed to delete finding:', error)
+      alert(error.response?.data?.message || 'Failed to delete finding')
+    }
+  }
+
+  const handleAddNewFinding = () => {
+    setEditingFinding(null)
+    setFormData({
+      title: '',
+      description: '',
+      severity: 'MEDIUM',
+      cvssScore: '',
+      affectedSystems: '',
+      evidence: '',
+      remediation: '',
+    })
+    setIsModalOpen(true)
   }
 
   const getSeverityBadge = (severity: Severity) => (
@@ -169,7 +223,7 @@ export default function ProjectDetail() {
       <div className="card">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold text-gray-900">Findings</h2>
-          <Button onClick={() => setIsModalOpen(true)}>+ Add Finding</Button>
+          <Button onClick={handleAddNewFinding}>+ Add Finding</Button>
         </div>
 
         {findings.length === 0 ? (
@@ -179,15 +233,29 @@ export default function ProjectDetail() {
             {findings.map((finding) => (
               <div key={finding.id} className="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition-colors">
                 <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-1">
                     {getSeverityBadge(finding.severity)}
                     <h3 className="font-semibold text-gray-900">{finding.title}</h3>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     {finding.cvssScore && (
                       <span className="text-sm text-gray-600">CVSS: {finding.cvssScore}</span>
                     )}
                     {getStatusBadge(finding.status)}
+                    <button
+                      onClick={() => handleEditFinding(finding)}
+                      className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1"
+                      title="Edit Finding"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={() => handleDeleteFinding(finding)}
+                      className="text-red-600 hover:text-red-800 text-xs px-2 py-1"
+                      title="Delete Finding"
+                    >
+                      🗑️
+                    </button>
                   </div>
                 </div>
                 <p className="text-sm text-gray-700 mb-2 line-clamp-2">{finding.description}</p>
@@ -206,9 +274,16 @@ export default function ProjectDetail() {
         )}
       </div>
 
-      {/* Add Finding Modal */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add Security Finding">
-        <form onSubmit={handleCreateFinding} className="space-y-4">
+      {/* Add/Edit Finding Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false)
+          setEditingFinding(null)
+        }}
+        title={editingFinding ? "Edit Security Finding" : "Add Security Finding"}
+      >
+        <form onSubmit={handleSubmitFinding} className="space-y-4">
           <div>
             <label className="label">Title</label>
             <input
@@ -298,9 +373,16 @@ export default function ProjectDetail() {
 
           <div className="flex gap-3">
             <Button type="submit" className="flex-1">
-              Add Finding
+              {editingFinding ? 'Update Finding' : 'Add Finding'}
             </Button>
-            <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setIsModalOpen(false)
+                setEditingFinding(null)
+              }}
+            >
               Cancel
             </Button>
           </div>
