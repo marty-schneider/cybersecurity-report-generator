@@ -2040,7 +2040,7 @@
                         <span class="milestone-title">Month 1 Milestone</span>
                     </div>
                     <div class="milestone-content">
-                        {{roadmap.phases.0.name}}: {{roadmap.phases.0.description}}
+                        {{#if milestone1}}{{milestone1.name}}: {{milestone1.description}}{{else}}Foundation: Initial security improvements{{/if}}
                     </div>
                 </div>
 
@@ -2050,7 +2050,7 @@
                         <span class="milestone-title">Month 5 Milestone</span>
                     </div>
                     <div class="milestone-content">
-                        {{#if roadmap.phases.1}}{{roadmap.phases.1.name}}: {{roadmap.phases.1.description}}{{/if}}
+                        {{#if milestone2}}{{milestone2.name}}: {{milestone2.description}}{{else}}Development: Core controls established{{/if}}
                     </div>
                 </div>
 
@@ -2060,7 +2060,7 @@
                         <span class="milestone-title">Month 12 Milestone</span>
                     </div>
                     <div class="milestone-content">
-                        {{#if roadmap.phases.2}}{{roadmap.phases.2.name}}: {{roadmap.phases.2.description}}{{/if}}
+                        {{#if milestone3}}{{milestone3.name}}: {{milestone3.description}}{{else}}Maturity: Enhanced security posture{{/if}}
                     </div>
                 </div>
             </div>

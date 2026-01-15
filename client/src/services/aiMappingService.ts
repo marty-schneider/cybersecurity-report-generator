@@ -24,7 +24,7 @@ export const aiMappingService = {
     sampleData: Record<string, any>[]
   ): Promise<MappingResponse> {
     try {
-      const response = await apiClient.post<MappingResponse>('/ai/map-columns', {
+      const response = await apiClient.post<MappingResponse>('/iocs/map-columns', {
         columns,
         sampleData: sampleData.slice(0, 5), // Send only first 5 rows for analysis
         targetSchema: {
