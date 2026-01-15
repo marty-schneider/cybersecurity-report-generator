@@ -20,6 +20,19 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ) => {
+  // Ensure CORS headers are set even on errors
+  const origin = req.headers.origin
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'https://cybersecurity-report-generator.vercel.app',
+    'https://cyberreport.martyschneider.com',
+  ]
+
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin)
+    res.setHeader('Access-Control-Allow-Credentials', 'true')
+  }
+
   if (err instanceof AppError) {
     logger.error(`${err.statusCode} - ${err.message} - ${req.originalUrl} - ${req.method}`)
 
