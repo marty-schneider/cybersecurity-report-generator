@@ -101,6 +101,7 @@ export default function ProjectModal({ isOpen, onClose, onSuccess }: ProjectModa
             <option value="VULN_ASSESSMENT">Vulnerability Assessment</option>
             <option value="SECURITY_AUDIT">Security Audit</option>
             <option value="RED_TEAM">Red Team</option>
+            <option value="INCIDENT_RESPONSE">Incident Response</option>
           </select>
         </div>
 

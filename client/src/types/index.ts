@@ -14,7 +14,7 @@ export interface AuthResponse {
 }
 
 // Project types
-export type AssessmentType = 'PENTEST' | 'VULN_ASSESSMENT' | 'SECURITY_AUDIT' | 'RED_TEAM'
+export type AssessmentType = 'PENTEST' | 'VULN_ASSESSMENT' | 'SECURITY_AUDIT' | 'RED_TEAM' | 'INCIDENT_RESPONSE'
 export type ProjectStatus = 'ACTIVE' | 'COMPLETED' | 'ARCHIVED'
 
 export interface Project {
