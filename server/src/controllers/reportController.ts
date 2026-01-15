@@ -11,7 +11,7 @@ export class ReportController {
   async generateReport(req: Request, res: Response) {
     try {
       const { projectId } = req.body
-      const userId = (req as any).user.userId
+      const userId = (req as any).user.id
 
       if (!projectId) {
         return res.status(400).json({ error: 'Project ID is required' })
@@ -76,7 +76,7 @@ export class ReportController {
   async getReport(req: Request, res: Response) {
     try {
       const { id } = req.params
-      const userId = (req as any).user.userId
+      const userId = (req as any).user.id
 
       const report = await prisma.report.findFirst({
         where: {
@@ -133,7 +133,7 @@ export class ReportController {
   async listReports(req: Request, res: Response) {
     try {
       const { projectId } = req.query
-      const userId = (req as any).user.userId
+      const userId = (req as any).user.id
 
       if (!projectId || typeof projectId !== 'string') {
         return res.status(400).json({ error: 'Project ID is required' })
