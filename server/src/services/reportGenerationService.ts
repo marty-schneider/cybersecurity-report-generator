@@ -73,6 +73,10 @@ Handlebars.registerHelper('json', function (context) {
   return JSON.stringify(context, null, 2)
 })
 
+Handlebars.registerHelper('lookup', function (obj, field) {
+  return obj && obj[field]
+})
+
 export class ReportGenerationService {
   private template: HandlebarsTemplateDelegate | null = null
 
@@ -222,6 +226,9 @@ export class ReportGenerationService {
       (r: any) => r.priority === 'HIGH' && r.effort === 'LOW'
     )
 
+    // Generate roadmap once
+    const roadmap = this.generateRoadmap(assessment.recommendations)
+
     return {
       // Project metadata
       project: {
@@ -281,7 +288,12 @@ export class ReportGenerationService {
       aiNarrative: projectData.aiNarrative,
 
       // Roadmap
-      roadmap: this.generateRoadmap(assessment.recommendations),
+      roadmap,
+
+      // Milestones for timeline (extracted for template ease)
+      milestone1: roadmap.phases[0],
+      milestone2: roadmap.phases[1],
+      milestone3: roadmap.phases[2],
     }
   }
 
