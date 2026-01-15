@@ -271,24 +271,24 @@ export const mapIOCColumns = async (
   next: NextFunction
 ) => {
   try {
-    const { headers, sampleRows } = req.body
+    const { columns, sampleData } = req.body
 
     // Validate inputs
-    if (!headers || !Array.isArray(headers)) {
-      throw new AppError('Headers must be an array of strings', 400)
+    if (!columns || !Array.isArray(columns)) {
+      throw new AppError('Columns must be an array of strings', 400)
     }
 
-    if (!sampleRows || !Array.isArray(sampleRows)) {
-      throw new AppError('Sample rows must be an array', 400)
+    if (!sampleData || !Array.isArray(sampleData)) {
+      throw new AppError('Sample data must be an array', 400)
     }
 
-    if (headers.length === 0) {
-      throw new AppError('Headers array cannot be empty', 400)
+    if (columns.length === 0) {
+      throw new AppError('Columns array cannot be empty', 400)
     }
 
-    // Validate headers are strings
-    if (!headers.every((h) => typeof h === 'string')) {
-      throw new AppError('All headers must be strings', 400)
+    // Validate columns are strings
+    if (!columns.every((h) => typeof h === 'string')) {
+      throw new AppError('All columns must be strings', 400)
     }
 
     // Initialize Anthropic client
@@ -297,11 +297,11 @@ export const mapIOCColumns = async (
     })
 
     // Format sample data for the prompt
-    const sampleDataText = sampleRows
+    const sampleDataText = sampleData
       .slice(0, 3)
-      .map((row, idx) => {
-        const rowData = headers
-          .map((header, colIdx) => `  ${header}: ${row[colIdx] ?? 'null'}`)
+      .map((rowObj: Record<string, any>, idx: number) => {
+        const rowData = Object.entries(rowObj)
+          .map(([key, value]) => `  ${key}: ${value ?? 'null'}`)
           .join('\n')
         return `Row ${idx + 1}:\n${rowData}`
       })
@@ -310,9 +310,9 @@ export const mapIOCColumns = async (
     // Build the prompt for Claude
     const prompt = `You are analyzing spreadsheet columns for IOC (Indicator of Compromise) import.
 
-Available columns: ${JSON.stringify(headers)}
+Available columns: ${JSON.stringify(columns)}
 
-Sample data (first ${Math.min(sampleRows.length, 3)} rows):
+Sample data (first ${Math.min(sampleData.length, 3)} rows):
 ${sampleDataText}
 
 Map these columns to IOC fields:
@@ -343,7 +343,7 @@ Return ONLY a JSON object with this structure:
 Rules:
 - Set field to null if no appropriate column exists
 - Confidence scores should be between 0.0 and 1.0
-- Use actual column names from the headers array
+- Use actual column names from the columns array
 - Base your mapping on both column names and sample data content
 - Return ONLY the JSON object, no additional text`
 
@@ -376,7 +376,19 @@ Rules:
       throw new Error('Invalid mapping structure returned by AI')
     }
 
-    res.json(mappingResult)
+    // Transform response to match frontend expected format
+    const mappings = Object.entries(mappingResult.mapping)
+      .filter(([_, sourceColumn]) => sourceColumn !== null)
+      .map(([targetField, sourceColumn]) => ({
+        sourceColumn: sourceColumn as string,
+        targetField: targetField as 'type' | 'value' | 'timestamp' | 'context' | 'source',
+        confidence: mappingResult.confidence[targetField] || 0.0,
+      }))
+
+    res.json({
+      mappings,
+      suggestions: {}, // Can be populated with alternative mapping suggestions in the future
+    })
   } catch (error: any) {
     if (error instanceof AppError) {
       next(error)
