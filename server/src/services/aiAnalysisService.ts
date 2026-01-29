@@ -107,6 +107,7 @@ IMPORTANT:
 - Focus on techniques actually evidenced by the IOCs provided
 - Consider the temporal sequence of IOCs when analyzing the attack progression
 - Return ONLY valid JSON, no additional text before or after
+- Use **Markdown** formatting for the 'narrative', 'timeline', 'threatActorProfile', and 'recommendations' fields (e.g., **bold** for emphasis, *italics*, lists).
 
 Analyze these IOCs now:`
   }

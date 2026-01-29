@@ -6,6 +6,7 @@ import { useProjectStore } from '../store/projectStore'
 import { Project, Finding, Severity } from '../types'
 import Button from '../components/common/Button'
 import Modal from '../components/common/Modal'
+import ReportPreviewModal from '../components/report/ReportPreviewModal'
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>()
@@ -14,6 +15,7 @@ export default function ProjectDetail() {
   const [findings, setFindings] = useState<Finding[]>([])
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -141,35 +143,36 @@ export default function ProjectDetail() {
             <p className="text-gray-600">Client: {currentProject.clientName}</p>
           </div>
           <div className="flex gap-3">
+            <Button onClick={() => setIsReportModalOpen(true)}>Generate Report</Button>
             <Link to={`/projects/${id}/threat-analysis`}>
-              <Button>🔍 Threat Analysis</Button>
+              <Button variant="secondary">🔍 Threat Analysis</Button>
             </Link>
             <Button variant="secondary">⚙️ Settings</Button>
           </div>
         </div>
+      </div>
 
-        {/* Project Info Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="card">
-            <p className="text-sm text-gray-600 mb-1">Assessment Type</p>
-            <p className="text-lg font-semibold text-gray-900">
-              {currentProject.assessmentType.replace(/_/g, ' ')}
-            </p>
-          </div>
-          <div className="card">
-            <p className="text-sm text-gray-600 mb-1">Status</p>
-            <p className="text-lg font-semibold text-gray-900">{currentProject.status}</p>
-          </div>
-          <div className="card">
-            <p className="text-sm text-gray-600 mb-1">Start Date</p>
-            <p className="text-lg font-semibold text-gray-900">
-              {new Date(currentProject.startDate).toLocaleDateString()}
-            </p>
-          </div>
-          <div className="card">
-            <p className="text-sm text-gray-600 mb-1">Findings</p>
-            <p className="text-lg font-semibold text-gray-900">{findings.length}</p>
-          </div>
+      {/* Project Info Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="card">
+          <p className="text-sm text-gray-600 mb-1">Assessment Type</p>
+          <p className="text-lg font-semibold text-gray-900">
+            {currentProject.assessmentType.replace(/_/g, ' ')}
+          </p>
+        </div>
+        <div className="card">
+          <p className="text-sm text-gray-600 mb-1">Status</p>
+          <p className="text-lg font-semibold text-gray-900">{currentProject.status}</p>
+        </div>
+        <div className="card">
+          <p className="text-sm text-gray-600 mb-1">Start Date</p>
+          <p className="text-lg font-semibold text-gray-900">
+            {new Date(currentProject.startDate).toLocaleDateString()}
+          </p>
+        </div>
+        <div className="card">
+          <p className="text-sm text-gray-600 mb-1">Findings</p>
+          <p className="text-lg font-semibold text-gray-900">{findings.length}</p>
         </div>
       </div>
 
@@ -314,6 +317,15 @@ export default function ProjectDetail() {
           </div>
         </form>
       </Modal>
-    </div>
+
+      <ReportPreviewModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        project={currentProject}
+        findings={findings}
+        iocs={currentProject.iocs || []}
+        ttps={currentProject.ttpMappings || []}
+      />
+    </div >
   )
 }

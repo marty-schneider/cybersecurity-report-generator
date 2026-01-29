@@ -7,6 +7,7 @@ import { IOC, IOCType, TTPMapping } from '../types'
 import Modal from '../components/common/Modal'
 import Button from '../components/common/Button'
 import IOCImportModal from '../components/ioc/IOCImportModal'
+import ReactMarkdown from 'react-markdown'
 
 export default function ThreatAnalysis() {
   const { id: projectId } = useParams<{ id: string }>()
@@ -23,12 +24,79 @@ export default function ThreatAnalysis() {
     context: '',
     source: '',
   })
-  // ... (rest of the file content)
+  useEffect(() => {
+    if (projectId) {
+      loadData()
+    }
+  }, [projectId])
+
+  const loadData = async () => {
+    if (!projectId) return
+    try {
+      setLoading(true)
+      const [iocsData, ttpsData] = await Promise.all([
+        iocService.getByProject(projectId),
+        ttpService.getByProject(projectId)
+      ])
+      setIOCs(iocsData)
+      setTTPs(ttpsData)
+    } catch (error) {
+      console.error('Failed to load data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleImportComplete = () => {
     loadData()
   }
 
-  // ... (rest of the file content)
+  const handleAnalyze = async () => {
+    if (!projectId) return
+    try {
+      setAnalyzing(true)
+      const result = await ttpService.analyze(projectId)
+      setAnalysisResult(result)
+      await loadData()
+    } catch (error) {
+      console.error('Analysis failed', error)
+    } finally {
+      setAnalyzing(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!projectId) return
+
+    try {
+      await iocService.create({
+        projectId,
+        ...formData
+      })
+      setIsModalOpen(false)
+      setFormData({
+        type: 'IP_ADDRESS',
+        value: '',
+        timestamp: new Date().toISOString().slice(0, 16),
+        context: '',
+        source: '',
+      })
+      loadData()
+    } catch (error) {
+      console.error('Failed to create IOC', error)
+    }
+  }
+
+  const getSeverityColor = (confidence: number) => {
+    if (confidence >= 0.8) return 'text-red-600'
+    if (confidence >= 0.5) return 'text-orange-500'
+    return 'text-yellow-600'
+  }
+
+  const getIOCTypeBadge = (type: IOCType) => {
+    return <span className="px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">{type}</span>
+  }
 
   return (
     <div>
@@ -52,20 +120,24 @@ export default function ThreatAnalysis() {
         <div className="mb-8 space-y-4">
           <div className="card">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">AI Analysis</h2>
-            <div className="prose max-w-none">
-              <p className="text-gray-700 whitespace-pre-wrap">{analysisResult.narrative}</p>
+            <div className="prose max-w-none text-gray-700">
+              <ReactMarkdown>{analysisResult.narrative}</ReactMarkdown>
             </div>
           </div>
 
           <div className="card">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Timeline</h3>
-            <p className="text-gray-700 whitespace-pre-wrap">{analysisResult.timeline}</p>
+            <div className="prose max-w-none text-gray-700">
+              <ReactMarkdown>{analysisResult.timeline}</ReactMarkdown>
+            </div>
           </div>
 
           {analysisResult.threatActorProfile && (
             <div className="card">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Threat Actor Profile</h3>
-              <p className="text-gray-700 whitespace-pre-wrap">{analysisResult.threatActorProfile}</p>
+              <div className="prose max-w-none text-gray-700">
+                <ReactMarkdown>{analysisResult.threatActorProfile}</ReactMarkdown>
+              </div>
             </div>
           )}
 
@@ -75,7 +147,9 @@ export default function ThreatAnalysis() {
               <ul className="list-disc list-inside space-y-2">
                 {analysisResult.recommendations.map((rec: string, idx: number) => (
                   <li key={idx} className="text-gray-700">
-                    {rec}
+                    <span className="inline-block align-top">
+                      <ReactMarkdown>{rec}</ReactMarkdown>
+                    </span>
                   </li>
                 ))}
               </ul>
