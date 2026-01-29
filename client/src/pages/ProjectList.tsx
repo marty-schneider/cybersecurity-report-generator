@@ -2,23 +2,14 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useProjectStore } from '../store/projectStore'
 import { projectService } from '../services/projectService'
-import { AssessmentType } from '../types'
-import Modal from '../components/common/Modal'
+import { AssessmentType, Project } from '../types'
 import Button from '../components/common/Button'
+import ProjectModal from '../components/project/ProjectModal'
 
 export default function ProjectList() {
   const { projects, setProjects } = useProjectStore()
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [formData, setFormData] = useState({
-    name: '',
-    clientName: '',
-    assessmentType: 'PENTEST' as AssessmentType,
-    startDate: new Date().toISOString().split('T')[0],
-    endDate: '',
-  })
-  const [creating, setCreating] = useState(false)
-  const [error, setError] = useState('')
 
   useEffect(() => {
     loadProjects()
@@ -36,30 +27,9 @@ export default function ProjectList() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setCreating(true)
-
-    try {
-      const newProject = await projectService.create({
-        ...formData,
-        endDate: formData.endDate || undefined,
-      })
-      setProjects([newProject, ...projects])
-      setIsModalOpen(false)
-      setFormData({
-        name: '',
-        clientName: '',
-        assessmentType: 'PENTEST',
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: '',
-      })
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create project')
-    } finally {
-      setCreating(false)
-    }
+  const handleProjectCreated = (newProject: Project) => {
+    setProjects([newProject, ...projects])
+    setIsModalOpen(false)
   }
 
   const getAssessmentTypeBadge = (type: AssessmentType) => {
@@ -117,13 +87,12 @@ export default function ProjectList() {
                 <div className="flex justify-between text-xs text-gray-500">
                   <span>Start: {new Date(project.startDate).toLocaleDateString()}</span>
                   <span
-                    className={`font-medium ${
-                      project.status === 'ACTIVE'
+                    className={`font-medium ${project.status === 'ACTIVE'
                         ? 'text-green-600'
                         : project.status === 'COMPLETED'
-                        ? 'text-blue-600'
-                        : 'text-gray-600'
-                    }`}
+                          ? 'text-blue-600'
+                          : 'text-gray-600'
+                      }`}
                   >
                     {project.status}
                   </span>
@@ -134,81 +103,11 @@ export default function ProjectList() {
         </div>
       )}
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Create New Project">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-              {error}
-            </div>
-          )}
-
-          <div>
-            <label className="label">Project Name</label>
-            <input
-              type="text"
-              required
-              className="input"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <label className="label">Client Name</label>
-            <input
-              type="text"
-              required
-              className="input"
-              value={formData.clientName}
-              onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <label className="label">Assessment Type</label>
-            <select
-              className="input"
-              value={formData.assessmentType}
-              onChange={(e) => setFormData({ ...formData, assessmentType: e.target.value as AssessmentType })}
-            >
-              <option value="PENTEST">Penetration Test</option>
-              <option value="VULN_ASSESSMENT">Vulnerability Assessment</option>
-              <option value="SECURITY_AUDIT">Security Audit</option>
-              <option value="RED_TEAM">Red Team</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="label">Start Date</label>
-            <input
-              type="date"
-              required
-              className="input"
-              value={formData.startDate}
-              onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <label className="label">End Date (Optional)</label>
-            <input
-              type="date"
-              className="input"
-              value={formData.endDate}
-              onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-            />
-          </div>
-
-          <div className="flex gap-3">
-            <Button type="submit" disabled={creating} className="flex-1">
-              {creating ? 'Creating...' : 'Create Project'}
-            </Button>
-            <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)}>
-              Cancel
-            </Button>
-          </div>
-        </form>
-      </Modal>
+      <ProjectModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onProjectCreated={handleProjectCreated}
+      />
     </div>
   )
 }

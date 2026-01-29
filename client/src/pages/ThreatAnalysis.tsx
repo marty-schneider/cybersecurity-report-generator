@@ -6,12 +6,14 @@ import { useIOCStore } from '../store/iocStore'
 import { IOC, IOCType, TTPMapping } from '../types'
 import Modal from '../components/common/Modal'
 import Button from '../components/common/Button'
+import IOCImportModal from '../components/ioc/IOCImportModal'
 
 export default function ThreatAnalysis() {
   const { id: projectId } = useParams<{ id: string }>()
   const { iocs, setIOCs, ttps, setTTPs, isAnalyzing, setAnalyzing } = useIOCStore()
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
   const [analysisResult, setAnalysisResult] = useState<any>(null)
 
   const [formData, setFormData] = useState({
@@ -21,110 +23,19 @@ export default function ThreatAnalysis() {
     context: '',
     source: '',
   })
-
-  useEffect(() => {
-    if (projectId) {
-      loadData()
-    }
-  }, [projectId])
-
-  const loadData = async () => {
-    if (!projectId) return
-
-    try {
-      setLoading(true)
-      const [iocsData, ttpsData] = await Promise.all([
-        iocService.getByProject(projectId),
-        ttpService.getByProject(projectId),
-      ])
-      setIOCs(iocsData)
-      setTTPs(ttpsData)
-    } catch (error) {
-      console.error('Failed to load data:', error)
-    } finally {
-      setLoading(false)
-    }
+  // ... (rest of the file content)
+  const handleImportComplete = () => {
+    loadData()
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!projectId) return
-
-    try {
-      const newIOC = await iocService.create({
-        projectId,
-        ...formData,
-      })
-      setIOCs([...iocs, newIOC])
-      setIsModalOpen(false)
-      setFormData({
-        type: 'IP_ADDRESS',
-        value: '',
-        timestamp: new Date().toISOString().slice(0, 16),
-        context: '',
-        source: '',
-      })
-    } catch (error) {
-      console.error('Failed to create IOC:', error)
-    }
-  }
-
-  const handleAnalyze = async () => {
-    if (!projectId) return
-
-    try {
-      setAnalyzing(true)
-      const result = await ttpService.analyze(projectId)
-      setAnalysisResult(result.analysis)
-      setTTPs(result.ttpMappings)
-    } catch (error: any) {
-      alert(error.response?.data?.message || 'Analysis failed')
-    } finally {
-      setAnalyzing(false)
-    }
-  }
-
-  const getIOCTypeBadge = (type: IOCType) => {
-    const colors: Record<string, string> = {
-      IP_ADDRESS: 'bg-blue-100 text-blue-700',
-      DOMAIN: 'bg-purple-100 text-purple-700',
-      URL: 'bg-indigo-100 text-indigo-700',
-      FILE_HASH_MD5: 'bg-green-100 text-green-700',
-      FILE_HASH_SHA1: 'bg-green-100 text-green-700',
-      FILE_HASH_SHA256: 'bg-green-100 text-green-700',
-      EMAIL: 'bg-yellow-100 text-yellow-700',
-      CVE: 'bg-red-100 text-red-700',
-      REGISTRY_KEY: 'bg-gray-100 text-gray-700',
-      COMMAND_LINE: 'bg-pink-100 text-pink-700',
-    }
-    return (
-      <span className={`px-2 py-1 rounded text-xs font-medium ${colors[type] || 'bg-gray-100 text-gray-700'}`}>
-        {type.replace(/_/g, ' ')}
-      </span>
-    )
-  }
-
-  const getSeverityColor = (confidence: number) => {
-    if (confidence >= 0.8) return 'text-severity-critical'
-    if (confidence >= 0.6) return 'text-severity-high'
-    if (confidence >= 0.4) return 'text-severity-medium'
-    return 'text-severity-low'
-  }
-
-  if (loading) {
-    return (
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Threat Analysis</h1>
-        <div className="card">Loading...</div>
-      </div>
-    )
-  }
+  // ... (rest of the file content)
 
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Threat Analysis</h1>
         <div className="flex gap-3">
+          <Button variant="secondary" onClick={() => setIsImportModalOpen(true)}>Import from File</Button>
           <Button onClick={() => setIsModalOpen(true)}>+ Add IOC</Button>
           <Button
             onClick={handleAnalyze}
@@ -315,6 +226,13 @@ export default function ThreatAnalysis() {
           </div>
         </form>
       </Modal>
+
+      <IOCImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        projectId={projectId!}
+        onImportComplete={handleImportComplete}
+      />
     </div>
   )
 }

@@ -263,3 +263,33 @@ export const deleteIOC = async (
     next(error)
   }
 }
+
+export const mapIOCColumns = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { headers, sampleData } = req.body
+
+    // We don't strictly need project permission here just to map columns, 
+    // as no data is being saved yet. It's a utility function.
+
+    if (!headers || !Array.isArray(headers) || headers.length === 0) {
+      throw new AppError('Headers array is required', 400)
+    }
+
+    if (!sampleData || !Array.isArray(sampleData)) {
+      throw new AppError('Sample data array is required', 400)
+    }
+
+    // Import lazily to avoid circular dependencies if any (though unlikely here)
+    const { aiAnalysisService } = await import('../services/aiAnalysisService.js')
+
+    const mapping = await aiAnalysisService.mapColumns(headers, sampleData)
+
+    res.json(mapping)
+  } catch (error) {
+    next(error)
+  }
+}

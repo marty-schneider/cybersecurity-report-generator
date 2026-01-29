@@ -67,9 +67,8 @@ export class AIAnalysisService {
   private buildAnalysisPrompt(iocs: IOCData[], projectContext?: string): string {
     const iocList = iocs
       .map((ioc, idx) => {
-        return `${idx + 1}. [${new Date(ioc.timestamp).toISOString()}] ${ioc.type}: ${ioc.value}${
-          ioc.context ? `\n   Context: ${ioc.context}` : ''
-        }${ioc.source ? `\n   Source: ${ioc.source}` : ''}`
+        return `${idx + 1}. [${new Date(ioc.timestamp).toISOString()}] ${ioc.type}: ${ioc.value}${ioc.context ? `\n   Context: ${ioc.context}` : ''
+          }${ioc.source ? `\n   Source: ${ioc.source}` : ''}`
       })
       .join('\n\n')
 
@@ -175,6 +174,59 @@ Keep your response concise (2-3 paragraphs).`
     } catch (error: any) {
       logger.error('IOC enrichment failed:', error)
       return null
+    }
+  }
+
+  async mapColumns(headers: string[], sampleData: any[]): Promise<Record<string, string>> {
+    try {
+      const prompt = `You are a data mapping assistant. I have a dataset of Indicators of Compromise (IOCs) with the following headers:
+${JSON.stringify(headers)}
+
+Here is a sample of the data (first few rows):
+${JSON.stringify(sampleData)}
+
+I need to map these columns to my internal schema fields:
+- type (e.g., "IP", "Domain", "Hash", "URL")
+- value (the actual IP address, domain name, hash, etc.)
+- timestamp (date/time of the event)
+- context (description, notes, or activity associated with the IOC)
+- source (where this IOC came from, e.g., "Firewall", "EDR", "ThreatFeed")
+
+Please identify which header from the provided list best maps to each of my schema fields.
+If a field has no clear equivalent in the headers, map it to null.
+Use the sample data to infer the content of the columns if headers are ambiguous.
+
+Return a JSON object with the following structure:
+{
+  "type": "HeaderName" or null,
+  "value": "HeaderName" or null,
+  "timestamp": "HeaderName" or null,
+  "context": "HeaderName" or null,
+  "source": "HeaderName" or null
+}
+
+IMPORTANT:
+- Return ONLY valid JSON.
+- Do not include any explanations.
+- The values must be exact strings from the provided headers list.`
+
+      const message = await anthropic.messages.create({
+        model: 'claude-haiku-20240307',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: prompt }],
+      })
+
+      const responseText = message.content[0].type === 'text' ? message.content[0].text : ''
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/)
+
+      if (!jsonMatch) {
+        throw new Error('No JSON found in response')
+      }
+
+      return JSON.parse(jsonMatch[0])
+    } catch (error: any) {
+      logger.error('Column mapping failed:', error)
+      throw new Error(`Column mapping failed: ${error.message}`)
     }
   }
 }
