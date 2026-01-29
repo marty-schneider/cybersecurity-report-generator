@@ -6,7 +6,9 @@ import { useIOCStore } from '../store/iocStore'
 import { IOC, IOCType, TTPMapping } from '../types'
 import Modal from '../components/common/Modal'
 import Button from '../components/common/Button'
+import LoadingSkeleton from '../components/LoadingSkeleton'
 import IOCImportModal from '../components/ioc/IOCImportModal'
+import { getIOCTypeBadgeClass, getSeverityColor } from '../constants/badgeColors'
 import ReactMarkdown from 'react-markdown'
 
 export default function ThreatAnalysis() {
@@ -16,6 +18,7 @@ export default function ThreatAnalysis() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isImportModalOpen, setIsImportModalOpen] = useState(false)
   const [analysisResult, setAnalysisResult] = useState<any>(null)
+  const [editingIOC, setEditingIOC] = useState<IOC | null>(null)
 
   const [formData, setFormData] = useState({
     type: 'IP_ADDRESS' as IOCType,
@@ -24,6 +27,7 @@ export default function ThreatAnalysis() {
     context: '',
     source: '',
   })
+
   useEffect(() => {
     if (projectId) {
       loadData()
@@ -32,36 +36,22 @@ export default function ThreatAnalysis() {
 
   const loadData = async () => {
     if (!projectId) return
+
     try {
       setLoading(true)
       const [iocsData, ttpsData] = await Promise.all([
         iocService.getByProject(projectId),
-        ttpService.getByProject(projectId)
+        ttpService.getByProject(projectId),
       ])
       setIOCs(iocsData)
       setTTPs(ttpsData)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load data:', error)
+      console.error('Error details:', error.response?.data || error.message)
+      setIOCs([])
+      setTTPs([])
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleImportComplete = () => {
-    loadData()
-  }
-
-  const handleAnalyze = async () => {
-    if (!projectId) return
-    try {
-      setAnalyzing(true)
-      const result = await ttpService.analyze(projectId)
-      setAnalysisResult(result)
-      await loadData()
-    } catch (error) {
-      console.error('Analysis failed', error)
-    } finally {
-      setAnalyzing(false)
     }
   }
 
@@ -70,11 +60,20 @@ export default function ThreatAnalysis() {
     if (!projectId) return
 
     try {
-      await iocService.create({
-        projectId,
-        ...formData
-      })
+      if (editingIOC) {
+        // Update existing IOC
+        const updatedIOC = await iocService.update(editingIOC.id, formData)
+        setIOCs(iocs.map(ioc => ioc.id === editingIOC.id ? updatedIOC : ioc))
+      } else {
+        // Create new IOC
+        const newIOC = await iocService.create({
+          projectId,
+          ...formData,
+        })
+        setIOCs([...iocs, newIOC])
+      }
       setIsModalOpen(false)
+      setEditingIOC(null)
       setFormData({
         type: 'IP_ADDRESS',
         value: '',
@@ -82,20 +81,77 @@ export default function ThreatAnalysis() {
         context: '',
         source: '',
       })
-      loadData()
-    } catch (error) {
-      console.error('Failed to create IOC', error)
+    } catch (error: any) {
+      console.error(`Failed to ${editingIOC ? 'update' : 'create'} IOC:`, error)
+      console.error('Error details:', error.response?.data || error.message)
+      alert(error.response?.data?.message || `Failed to ${editingIOC ? 'update' : 'create'} IOC`)
     }
   }
 
-  const getSeverityColor = (confidence: number) => {
-    if (confidence >= 0.8) return 'text-red-600'
-    if (confidence >= 0.5) return 'text-orange-500'
-    return 'text-yellow-600'
+  const handleEdit = (ioc: IOC) => {
+    setEditingIOC(ioc)
+    setFormData({
+      type: ioc.type,
+      value: ioc.value,
+      timestamp: new Date(ioc.timestamp).toISOString().slice(0, 16),
+      context: ioc.context || '',
+      source: ioc.source || '',
+    })
+    setIsModalOpen(true)
   }
 
-  const getIOCTypeBadge = (type: IOCType) => {
-    return <span className="px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">{type}</span>
+  const handleDelete = async (ioc: IOC) => {
+    if (!confirm(`Are you sure you want to delete this IOC: ${ioc.value}?`)) return
+
+    try {
+      await iocService.delete(ioc.id)
+      setIOCs(iocs.filter(i => i.id !== ioc.id))
+    } catch (error: any) {
+      console.error('Failed to delete IOC:', error)
+      alert(error.response?.data?.message || 'Failed to delete IOC')
+    }
+  }
+
+  const handleAddNew = () => {
+    setEditingIOC(null)
+    setFormData({
+      type: 'IP_ADDRESS',
+      value: '',
+      timestamp: new Date().toISOString().slice(0, 16),
+      context: '',
+      source: '',
+    })
+    setIsModalOpen(true)
+  }
+
+  const handleAnalyze = async () => {
+    if (!projectId) return
+
+    try {
+      setAnalyzing(true)
+      const result = await ttpService.analyze(projectId)
+      setAnalysisResult(result.analysis)
+      setTTPs(result.ttpMappings)
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Analysis failed')
+    } finally {
+      setAnalyzing(false)
+    }
+  }
+
+  const getIOCTypeBadge = (type: IOCType) => (
+    <span className={`px-2 py-1 rounded text-xs font-medium ${getIOCTypeBadgeClass(type)}`}>
+      {type.replace(/_/g, ' ')}
+    </span>
+  )
+
+  if (loading) {
+    return (
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Threat Analysis</h1>
+        <LoadingSkeleton type="table" count={5} />
+      </div>
+    )
   }
 
   return (
@@ -103,8 +159,10 @@ export default function ThreatAnalysis() {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Threat Analysis</h1>
         <div className="flex gap-3">
-          <Button variant="secondary" onClick={() => setIsImportModalOpen(true)}>Import from File</Button>
-          <Button onClick={() => setIsModalOpen(true)}>+ Add IOC</Button>
+          <Button onClick={handleAddNew}>+ Add IOC</Button>
+          <Button onClick={() => setIsImportModalOpen(true)} variant="secondary">
+            📄 Import from File
+          </Button>
           <Button
             onClick={handleAnalyze}
             disabled={isAnalyzing || iocs.length === 0}
@@ -120,24 +178,20 @@ export default function ThreatAnalysis() {
         <div className="mb-8 space-y-4">
           <div className="card">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">AI Analysis</h2>
-            <div className="prose max-w-none text-gray-700">
-              <ReactMarkdown>{analysisResult.narrative}</ReactMarkdown>
+            <div className="prose max-w-none">
+              <p className="text-gray-700 whitespace-pre-wrap">{analysisResult.narrative}</p>
             </div>
           </div>
 
           <div className="card">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Timeline</h3>
-            <div className="prose max-w-none text-gray-700">
-              <ReactMarkdown>{analysisResult.timeline}</ReactMarkdown>
-            </div>
+            <p className="text-gray-700 whitespace-pre-wrap">{analysisResult.timeline}</p>
           </div>
 
           {analysisResult.threatActorProfile && (
             <div className="card">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Threat Actor Profile</h3>
-              <div className="prose max-w-none text-gray-700">
-                <ReactMarkdown>{analysisResult.threatActorProfile}</ReactMarkdown>
-              </div>
+              <p className="text-gray-700 whitespace-pre-wrap">{analysisResult.threatActorProfile}</p>
             </div>
           )}
 
@@ -147,9 +201,7 @@ export default function ThreatAnalysis() {
               <ul className="list-disc list-inside space-y-2">
                 {analysisResult.recommendations.map((rec: string, idx: number) => (
                   <li key={idx} className="text-gray-700">
-                    <span className="inline-block align-top">
-                      <ReactMarkdown>{rec}</ReactMarkdown>
-                    </span>
+                    {rec}
                   </li>
                 ))}
               </ul>
@@ -200,15 +252,31 @@ export default function ThreatAnalysis() {
         ) : (
           <div className="space-y-3">
             {iocs.map((ioc) => (
-              <div key={ioc.id} className="border-l-4 border-primary-500 pl-4 py-2">
+              <div key={ioc.id} className="border-l-4 border-primary-500 pl-4 py-2 hover:bg-gray-50 transition-colors">
                 <div className="flex justify-between items-start mb-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-1">
                     {getIOCTypeBadge(ioc.type)}
                     <span className="font-mono text-sm text-gray-900">{ioc.value}</span>
                   </div>
-                  <span className="text-xs text-gray-500">
-                    {new Date(ioc.timestamp).toLocaleString()}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">
+                      {new Date(ioc.timestamp).toLocaleString()}
+                    </span>
+                    <button
+                      onClick={() => handleEdit(ioc)}
+                      className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1"
+                      title="Edit IOC"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={() => handleDelete(ioc)}
+                      className="text-red-600 hover:text-red-800 text-xs px-2 py-1"
+                      title="Delete IOC"
+                    >
+                      🗑️
+                    </button>
+                  </div>
                 </div>
                 {ioc.context && <p className="text-sm text-gray-600 mt-1">{ioc.context}</p>}
                 {ioc.source && <p className="text-xs text-gray-500 mt-1">Source: {ioc.source}</p>}
@@ -218,8 +286,15 @@ export default function ThreatAnalysis() {
         )}
       </div>
 
-      {/* Add IOC Modal */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add Indicator of Compromise">
+      {/* Add/Edit IOC Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false)
+          setEditingIOC(null)
+        }}
+        title={editingIOC ? "Edit Indicator of Compromise" : "Add Indicator of Compromise"}
+      >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="label">IOC Type</label>
@@ -292,20 +367,28 @@ export default function ThreatAnalysis() {
 
           <div className="flex gap-3">
             <Button type="submit" className="flex-1">
-              Add IOC
+              {editingIOC ? 'Update IOC' : 'Add IOC'}
             </Button>
-            <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setIsModalOpen(false)
+                setEditingIOC(null)
+              }}
+            >
               Cancel
             </Button>
           </div>
         </form>
       </Modal>
 
+      {/* Import IOC Modal */}
       <IOCImportModal
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
-        projectId={projectId!}
-        onImportComplete={handleImportComplete}
+        projectId={projectId || ''}
+        onImportComplete={loadData}
       />
     </div>
   )

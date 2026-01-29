@@ -38,12 +38,14 @@ export default function ProjectList() {
       VULN_ASSESSMENT: 'bg-blue-100 text-blue-700',
       SECURITY_AUDIT: 'bg-green-100 text-green-700',
       RED_TEAM: 'bg-red-100 text-red-700',
+      INCIDENT_RESPONSE: 'bg-orange-100 text-orange-700',
     }
-    const labels = {
+    const labels: Record<string, string> = {
       PENTEST: 'Penetration Test',
       VULN_ASSESSMENT: 'Vulnerability Assessment',
       SECURITY_AUDIT: 'Security Audit',
       RED_TEAM: 'Red Team',
+      INCIDENT_RESPONSE: 'Incident Response',
     }
     return (
       <span className={`px-2 py-1 rounded text-xs font-medium ${colors[type]}`}>
@@ -88,10 +90,10 @@ export default function ProjectList() {
                   <span>Start: {new Date(project.startDate).toLocaleDateString()}</span>
                   <span
                     className={`font-medium ${project.status === 'ACTIVE'
-                        ? 'text-green-600'
-                        : project.status === 'COMPLETED'
-                          ? 'text-blue-600'
-                          : 'text-gray-600'
+                      ? 'text-green-600'
+                      : project.status === 'COMPLETED'
+                        ? 'text-blue-600'
+                        : 'text-gray-600'
                       }`}
                   >
                     {project.status}

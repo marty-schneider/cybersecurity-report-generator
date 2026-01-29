@@ -148,12 +148,12 @@ npm run dev
 ```
 
 7. **Open the app**
-Navigate to http://localhost:3000
+Navigate to https://cyberreport.martyschneider.com
 
 ## 📚 Usage Guide
 
 ### 1. Create an Account
-- Navigate to http://localhost:3000
+- Navigate to https://cyberreport.martyschneider.com
 - Click "Register" and create your account
 - Login with your credentials
 

@@ -72,9 +72,59 @@ export class AIAnalysisService {
       })
       .join('\n\n')
 
-    return `You are a cybersecurity threat intelligence analyst specializing in malware analysis and incident response.
+    // Detect if this is an incident response project
+    const isIncidentResponse = projectContext?.includes('INCIDENT_RESPONSE')
 
-I need you to analyze the following Indicators of Compromise (IOCs) from a security incident and provide a comprehensive threat assessment.
+    if (isIncidentResponse) {
+      // Incident Response-focused prompt
+      return `You are a cybersecurity incident responder specializing in digital forensics and incident investigation.
+
+I need you to analyze the following Indicators of Compromise (IOCs) from an active security incident and reconstruct the attack timeline.
+
+${projectContext ? `PROJECT CONTEXT:\n${projectContext}\n\n` : ''}INDICATORS OF COMPROMISE (${iocs.length} total):
+${iocList}
+
+Please provide your analysis in the following JSON format:
+
+{
+  "narrative": "A detailed incident reconstruction (2-4 paragraphs) describing what happened, when it happened, the scope of compromise, and the attacker's actions based on the temporal sequence of IOCs.",
+  "ttps": [
+    {
+      "mitreId": "T####.###",
+      "tacticName": "MITRE ATT&CK Tactic name",
+      "techniqueName": "MITRE ATT&CK Technique name",
+      "description": "How this technique was observed in this incident",
+      "confidence": 0.85,
+      "reasoning": "Evidence from specific IOCs that confirms this technique"
+    }
+  ],
+  "timeline": "A detailed chronological timeline reconstructing the incident from initial compromise through all observed attacker activities. Include timestamps and specific IOCs for each phase.",
+  "threatActorProfile": "Analysis of the threat actor's capabilities, motivations, and potential attribution based on observed TTPs and IOC patterns.",
+  "recommendations": [
+    "Immediate containment actions",
+    "Forensic preservation steps",
+    "Eradication measures",
+    "Recovery procedures",
+    "Long-term security improvements"
+  ]
+}
+
+INCIDENT RESPONSE FOCUS:
+- Reconstruct the attack chain chronologically from first to last IOC
+- Identify initial access vector, lateral movement, persistence mechanisms, and data exfiltration
+- Map IOCs to MITRE ATT&CK techniques (use valid IDs like T1566.001, T1059.001, etc.)
+- Provide confidence scores between 0.0 and 1.0 for each TTP mapping
+- Identify gaps in the timeline where additional forensics may be needed
+- Focus on answering: What happened? When? What's compromised? What did the attacker do?
+- Prioritize containment and eradication recommendations
+- Return ONLY valid JSON, no additional text before or after
+
+Analyze this incident now:`
+    } else {
+      // Penetration Test/Audit-focused prompt
+      return `You are a cybersecurity threat intelligence analyst specializing in malware analysis and adversary emulation.
+
+I need you to analyze the following Indicators of Compromise (IOCs) from a security assessment and provide a comprehensive threat assessment.
 
 ${projectContext ? `PROJECT CONTEXT:\n${projectContext}\n\n` : ''}INDICATORS OF COMPROMISE (${iocs.length} total):
 ${iocList}
@@ -110,6 +160,7 @@ IMPORTANT:
 - Use **Markdown** formatting for the 'narrative', 'timeline', 'threatActorProfile', and 'recommendations' fields (e.g., **bold** for emphasis, *italics*, lists).
 
 Analyze these IOCs now:`
+    }
   }
 
   private parseAnalysisResponse(responseText: string): AnalysisResult {
