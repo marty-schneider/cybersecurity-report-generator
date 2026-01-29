@@ -1,106 +1,94 @@
-import ReactMarkdown from 'react-markdown'
+import { useState, useEffect, useRef } from 'react'
 import Modal from '../common/Modal'
 import Button from '../common/Button'
-import { Project, Finding, IOC, TTPMapping } from '../../types'
+import { Project } from '../../types'
+import reportService from '../../services/reportService'
 
 interface ReportPreviewModalProps {
     isOpen: boolean
     onClose: () => void
     project: Project
-    findings: Finding[]
-    iocs: IOC[]
-    ttps: TTPMapping[]
 }
 
 export default function ReportPreviewModal({
     isOpen,
     onClose,
     project,
-    findings,
-    iocs,
-    ttps
 }: ReportPreviewModalProps) {
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+    const [reportHtml, setReportHtml] = useState<string>('')
+    const iframeRef = useRef<HTMLIFrameElement>(null)
 
-    const generateMarkdown = () => {
-        const date = new Date().toLocaleDateString()
-
-        let md = `# Cybersecurity Assessment Report\n\n`
-        md += `**Project:** ${project.name}\n`
-        md += `**Client:** ${project.clientName}\n`
-        md += `**Date:** ${date}\n`
-        md += `**Assessment Type:** ${project.assessmentType}\n\n`
-
-        md += `## Executive Summary\n`
-        md += `This report details the findings and analysis from the ${project.assessmentType} conducted for ${project.clientName}. `
-        md += `A total of **${findings.length} findings** and **${ttps.length} MITRE ATT&CK techniques** were identified.\n\n`
-
-        if (findings.length > 0) {
-            md += `## Security Findings\n\n`
-            findings.forEach((f, idx) => {
-                md += `### ${idx + 1}. ${f.title}\n`
-                md += `**Severity:** ${f.severity} | **Status:** ${f.status}\n\n`
-                md += `**Description:**\n${f.description}\n\n`
-                if (f.remediation) {
-                    md += `**Remediation:**\n${f.remediation}\n\n`
-                }
-                md += `---\n\n`
-            })
+    useEffect(() => {
+        if (isOpen && project.id) {
+            loadReport()
         }
+    }, [isOpen, project.id])
 
-        if (ttps.length > 0) {
-            md += `## Threat Analysis (MITRE ATT&CK)\n\n`
-            md += `Based on the analysis of **${iocs.length} Indicators of Compromise**, the following techniques were observed:\n\n`
-
-            // Group by Tactic? For now just list them
-            ttps.forEach(ttp => {
-                md += `### ${ttp.mitreId}: ${ttp.techniqueName}\n`
-                md += `**Tactic:** ${ttp.tacticName} | **Confidence:** ${Math.round(ttp.confidence * 100)}%\n\n`
-                md += `${ttp.description}\n\n`
-            })
+    const loadReport = async () => {
+        try {
+            setLoading(true)
+            setError(null)
+            const response = await reportService.generateReport(project.id)
+            setReportHtml(response.html)
+        } catch (err: any) {
+            console.error('Failed to generate report:', err)
+            setError('Failed to generate report. Please try again.')
+        } finally {
+            setLoading(false)
         }
-
-        if (iocs.length > 0) {
-            md += `## Appendix: Indicators of Compromise\n\n`
-            md += `| Type | Value | Source |\n`
-            md += `|------|-------|--------|\n`
-            iocs.slice(0, 50).forEach(ioc => {
-                md += `| ${ioc.type} | ${ioc.value} | ${ioc.source || '-'} |\n`
-            })
-            if (iocs.length > 50) {
-                md += `\n*(Showing first 50 of ${iocs.length} IOCs)*\n`
-            }
-        }
-
-        return md
     }
 
     const handlePrint = () => {
-        window.print()
+        if (iframeRef.current && iframeRef.current.contentWindow) {
+            iframeRef.current.contentWindow.print()
+        }
     }
-
-    const reportContent = generateMarkdown()
 
     if (!isOpen) return null
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Report Preview" maxWidth="4xl">
-            <div className="flex justify-end gap-2 mb-4 no-print">
-                <Button onClick={handlePrint}>Print / Save as PDF</Button>
-                <Button variant="secondary" onClick={onClose}>Close</Button>
+            <div className="flex justify-between items-center mb-4 no-print">
+                <div className="text-sm text-gray-500">
+                    {loading ? 'Generating fresh analysis...' : 'Preview generated from live data'}
+                </div>
+                <div className="flex gap-2">
+                    <Button onClick={handlePrint} disabled={loading || !reportHtml}>
+                        Print / Save as PDF
+                    </Button>
+                    <Button variant="secondary" onClick={onClose}>Close</Button>
+                </div>
             </div>
 
-            <div className="prose max-w-none p-8 bg-white border rounded print:border-none print:p-0">
-                <ReactMarkdown>{reportContent}</ReactMarkdown>
-            </div>
+            <div className="bg-white border rounded h-[80vh] overflow-hidden relative">
+                {loading && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mb-4"></div>
+                        <p className="text-gray-600 font-medium">Generating Report & AI Analysis...</p>
+                        <p className="text-gray-400 text-sm mt-2">This may take 15-30 seconds</p>
+                    </div>
+                )}
 
-            <style>{`
-                @media print {
-                    .no-print { display: none !important; }
-                    .modal-overlay { position: static; background: none; }
-                    .modal-content { box-shadow: none; width: 100%; max-width: 100%; }
-                    body > *:not(.modal-root) { display: none; }
-                }
-            `}</style>
+                {error && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-50 text-red-600 p-8 text-center">
+                        <p className="text-lg font-semibold mb-2">Error Generating Report</p>
+                        <p>{error}</p>
+                        <Button onClick={loadReport} className="mt-4">Try Again</Button>
+                    </div>
+                )}
+
+                {reportHtml && (
+                    <iframe
+                        ref={iframeRef}
+                        srcDoc={reportHtml}
+                        className="w-full h-full border-none"
+                        title="Report Preview"
+                        sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                    />
+                )}
+            </div>
         </Modal>
     )
 }

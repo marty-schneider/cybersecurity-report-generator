@@ -784,9 +784,6 @@ export default function ProjectDetail() {
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
         project={currentProject}
-        findings={findings}
-        iocs={iocs}
-        ttps={currentProject.ttpMappings || []}
       />
     </div>
   )
