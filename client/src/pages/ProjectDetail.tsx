@@ -10,6 +10,7 @@ import Button from '../components/common/Button'
 import Modal from '../components/common/Modal'
 import LoadingSkeleton from '../components/LoadingSkeleton'
 import IOCImportModal from '../components/ioc/IOCImportModal'
+import ReportPreviewModal from '../components/report/ReportPreviewModal'
 import { getSeverityBadgeClass, getStatusBadgeClass, getIOCTypeBadgeClass, getSeverityColor } from '../constants/badgeColors'
 
 export default function ProjectDetail() {
@@ -23,6 +24,7 @@ export default function ProjectDetail() {
   const [editingFinding, setEditingFinding] = useState<Finding | null>(null)
   const [isIOCModalOpen, setIsIOCModalOpen] = useState(false)
   const [isImportModalOpen, setIsImportModalOpen] = useState(false)
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false)
   const [editingIOC, setEditingIOC] = useState<IOC | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [formData, setFormData] = useState({
@@ -297,9 +299,7 @@ export default function ProjectDetail() {
             <Link to={`/projects/${id}/threat-analysis`}>
               <Button>🔍 Threat Analysis</Button>
             </Link>
-            <Link to={`/projects/${id}/report`}>
-              <Button variant="primary">📄 Generate Report</Button>
-            </Link>
+            <Button onClick={() => setIsReportModalOpen(true)} variant="primary">📄 Generate Report</Button>
             <Button variant="secondary">⚙️ Settings</Button>
           </div>
         </div>
@@ -420,259 +420,259 @@ export default function ProjectDetail() {
 
       {/* Findings Section - Only show for non-IR projects */}
       {!isIncidentResponse && (
-      <div className="card">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Findings</h2>
-          <Button onClick={handleAddNewFinding}>+ Add Finding</Button>
-        </div>
-
-        {findings.length === 0 ? (
-          <p className="text-gray-600">No findings yet. Add your first security finding to get started.</p>
-        ) : (
-          <div className="space-y-4">
-            {findings.map((finding) => (
-              <div key={finding.id} className="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition-colors">
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center gap-3 flex-1">
-                    {getSeverityBadge(finding.severity)}
-                    <h3 className="font-semibold text-gray-900">{finding.title}</h3>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {finding.cvssScore && (
-                      <span className="text-sm text-gray-600">CVSS: {finding.cvssScore}</span>
-                    )}
-                    {getStatusBadge(finding.status)}
-                    <button
-                      onClick={() => handleEditFinding(finding)}
-                      className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1"
-                      title="Edit Finding"
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      onClick={() => handleDeleteFinding(finding)}
-                      className="text-red-600 hover:text-red-800 text-xs px-2 py-1"
-                      title="Delete Finding"
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-700 mb-2 line-clamp-2">{finding.description}</p>
-                {finding.affectedSystems.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {finding.affectedSystems.map((system, idx) => (
-                      <span key={idx} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                        {system}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
+        <div className="card">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-semibold text-gray-900">Findings</h2>
+            <Button onClick={handleAddNewFinding}>+ Add Finding</Button>
           </div>
-        )}
-      </div>
+
+          {findings.length === 0 ? (
+            <p className="text-gray-600">No findings yet. Add your first security finding to get started.</p>
+          ) : (
+            <div className="space-y-4">
+              {findings.map((finding) => (
+                <div key={finding.id} className="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition-colors">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center gap-3 flex-1">
+                      {getSeverityBadge(finding.severity)}
+                      <h3 className="font-semibold text-gray-900">{finding.title}</h3>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {finding.cvssScore && (
+                        <span className="text-sm text-gray-600">CVSS: {finding.cvssScore}</span>
+                      )}
+                      {getStatusBadge(finding.status)}
+                      <button
+                        onClick={() => handleEditFinding(finding)}
+                        className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1"
+                        title="Edit Finding"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => handleDeleteFinding(finding)}
+                        className="text-red-600 hover:text-red-800 text-xs px-2 py-1"
+                        title="Delete Finding"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-700 mb-2 line-clamp-2">{finding.description}</p>
+                  {finding.affectedSystems.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {finding.affectedSystems.map((system, idx) => (
+                        <span key={idx} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                          {system}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       {/* IOC Section - For non-IR projects, show after Findings */}
       {!isIncidentResponse && (
-      <div className="card mt-8">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">Indicators of Compromise</h2>
-            <p className="text-sm text-gray-600 mt-1">Add IOCs to enable AI-powered threat analysis</p>
-          </div>
-          <div className="flex gap-3">
-            <Button onClick={handleAddNewIOC} variant="secondary">+ Add IOC</Button>
-            <Button onClick={() => setIsImportModalOpen(true)} variant="secondary">
-              📄 Import from File
-            </Button>
-            {iocs.length > 0 && (
-              <Button
-                onClick={handleAnalyzeIOCs}
-                disabled={isAnalyzing}
-                variant="primary"
-              >
-                {isAnalyzing ? 'Analyzing...' : '🤖 Analyze with AI'}
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {iocs.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-gray-600 mb-4">No IOCs yet. Add indicators to enable AI-powered threat analysis.</p>
-            <div className="flex gap-3 justify-center">
-              <Button onClick={handleAddNewIOC} variant="primary">+ Add Your First IOC</Button>
+        <div className="card mt-8">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Indicators of Compromise</h2>
+              <p className="text-sm text-gray-600 mt-1">Add IOCs to enable AI-powered threat analysis</p>
+            </div>
+            <div className="flex gap-3">
+              <Button onClick={handleAddNewIOC} variant="secondary">+ Add IOC</Button>
               <Button onClick={() => setIsImportModalOpen(true)} variant="secondary">
                 📄 Import from File
               </Button>
+              {iocs.length > 0 && (
+                <Button
+                  onClick={handleAnalyzeIOCs}
+                  disabled={isAnalyzing}
+                  variant="primary"
+                >
+                  {isAnalyzing ? 'Analyzing...' : '🤖 Analyze with AI'}
+                </Button>
+              )}
             </div>
           </div>
-        ) : (
-          <div className="space-y-3">
-            {iocs.map((ioc) => (
-              <div key={ioc.id} className="border-l-4 border-primary-500 pl-4 py-2 hover:bg-gray-50 transition-colors">
-                <div className="flex justify-between items-start mb-1">
-                  <div className="flex items-center gap-2 flex-1">
-                    {getIOCTypeBadge(ioc.type)}
-                    <span className="font-mono text-sm text-gray-900">{ioc.value}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500">
-                      {new Date(ioc.timestamp).toLocaleString()}
-                    </span>
-                    <button
-                      onClick={() => handleEditIOC(ioc)}
-                      className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1"
-                      title="Edit IOC"
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      onClick={() => handleDeleteIOC(ioc)}
-                      className="text-red-600 hover:text-red-800 text-xs px-2 py-1"
-                      title="Delete IOC"
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                </div>
-                {ioc.context && <p className="text-sm text-gray-600 mt-1">{ioc.context}</p>}
-                {ioc.source && <p className="text-xs text-gray-500 mt-1">Source: {ioc.source}</p>}
-              </div>
-            ))}
-          </div>
-        )}
 
-        {iocs.length > 0 && (
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <Link to={`/projects/${id}/threat-analysis`}>
-              <Button variant="secondary" className="w-full">
-                🔍 View Full Threat Analysis & Results →
-              </Button>
-            </Link>
-          </div>
-        )}
-      </div>
+          {iocs.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-600 mb-4">No IOCs yet. Add indicators to enable AI-powered threat analysis.</p>
+              <div className="flex gap-3 justify-center">
+                <Button onClick={handleAddNewIOC} variant="primary">+ Add Your First IOC</Button>
+                <Button onClick={() => setIsImportModalOpen(true)} variant="secondary">
+                  📄 Import from File
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {iocs.map((ioc) => (
+                <div key={ioc.id} className="border-l-4 border-primary-500 pl-4 py-2 hover:bg-gray-50 transition-colors">
+                  <div className="flex justify-between items-start mb-1">
+                    <div className="flex items-center gap-2 flex-1">
+                      {getIOCTypeBadge(ioc.type)}
+                      <span className="font-mono text-sm text-gray-900">{ioc.value}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500">
+                        {new Date(ioc.timestamp).toLocaleString()}
+                      </span>
+                      <button
+                        onClick={() => handleEditIOC(ioc)}
+                        className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1"
+                        title="Edit IOC"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => handleDeleteIOC(ioc)}
+                        className="text-red-600 hover:text-red-800 text-xs px-2 py-1"
+                        title="Delete IOC"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+                  {ioc.context && <p className="text-sm text-gray-600 mt-1">{ioc.context}</p>}
+                  {ioc.source && <p className="text-xs text-gray-500 mt-1">Source: {ioc.source}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {iocs.length > 0 && (
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <Link to={`/projects/${id}/threat-analysis`}>
+                <Button variant="secondary" className="w-full">
+                  🔍 View Full Threat Analysis & Results →
+                </Button>
+              </Link>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Add/Edit Finding Modal - Only for non-IR projects */}
       {!isIncidentResponse && (
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false)
-          setEditingFinding(null)
-        }}
-        title={editingFinding ? "Edit Security Finding" : "Add Security Finding"}
-      >
-        <form onSubmit={handleSubmitFinding} className="space-y-4">
-          <div>
-            <label className="label">Title</label>
-            <input
-              type="text"
-              required
-              className="input"
-              placeholder="e.g., SQL Injection in Login Form"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            />
-          </div>
+        <Modal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false)
+            setEditingFinding(null)
+          }}
+          title={editingFinding ? "Edit Security Finding" : "Add Security Finding"}
+        >
+          <form onSubmit={handleSubmitFinding} className="space-y-4">
+            <div>
+              <label className="label">Title</label>
+              <input
+                type="text"
+                required
+                className="input"
+                placeholder="e.g., SQL Injection in Login Form"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              />
+            </div>
 
-          <div>
-            <label className="label">Severity</label>
-            <select
-              className="input"
-              value={formData.severity}
-              onChange={(e) => setFormData({ ...formData, severity: e.target.value as Severity })}
-            >
-              <option value="CRITICAL">Critical</option>
-              <option value="HIGH">High</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="LOW">Low</option>
-              <option value="INFO">Informational</option>
-            </select>
-          </div>
+            <div>
+              <label className="label">Severity</label>
+              <select
+                className="input"
+                value={formData.severity}
+                onChange={(e) => setFormData({ ...formData, severity: e.target.value as Severity })}
+              >
+                <option value="CRITICAL">Critical</option>
+                <option value="HIGH">High</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="LOW">Low</option>
+                <option value="INFO">Informational</option>
+              </select>
+            </div>
 
-          <div>
-            <label className="label">CVSS Score (Optional)</label>
-            <input
-              type="number"
-              step="0.1"
-              min="0"
-              max="10"
-              className="input"
-              placeholder="e.g., 7.5"
-              value={formData.cvssScore}
-              onChange={(e) => setFormData({ ...formData, cvssScore: e.target.value })}
-            />
-          </div>
+            <div>
+              <label className="label">CVSS Score (Optional)</label>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                max="10"
+                className="input"
+                placeholder="e.g., 7.5"
+                value={formData.cvssScore}
+                onChange={(e) => setFormData({ ...formData, cvssScore: e.target.value })}
+              />
+            </div>
 
-          <div>
-            <label className="label">Description</label>
-            <textarea
-              required
-              className="input"
-              rows={4}
-              placeholder="Detailed description of the vulnerability..."
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            />
-          </div>
+            <div>
+              <label className="label">Description</label>
+              <textarea
+                required
+                className="input"
+                rows={4}
+                placeholder="Detailed description of the vulnerability..."
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              />
+            </div>
 
-          <div>
-            <label className="label">Affected Systems (comma-separated)</label>
-            <input
-              type="text"
-              className="input"
-              placeholder="e.g., web-server-01, api.example.com"
-              value={formData.affectedSystems}
-              onChange={(e) => setFormData({ ...formData, affectedSystems: e.target.value })}
-            />
-          </div>
+            <div>
+              <label className="label">Affected Systems (comma-separated)</label>
+              <input
+                type="text"
+                className="input"
+                placeholder="e.g., web-server-01, api.example.com"
+                value={formData.affectedSystems}
+                onChange={(e) => setFormData({ ...formData, affectedSystems: e.target.value })}
+              />
+            </div>
 
-          <div>
-            <label className="label">Evidence (Optional)</label>
-            <textarea
-              className="input"
-              rows={3}
-              placeholder="Screenshots, logs, or other evidence..."
-              value={formData.evidence}
-              onChange={(e) => setFormData({ ...formData, evidence: e.target.value })}
-            />
-          </div>
+            <div>
+              <label className="label">Evidence (Optional)</label>
+              <textarea
+                className="input"
+                rows={3}
+                placeholder="Screenshots, logs, or other evidence..."
+                value={formData.evidence}
+                onChange={(e) => setFormData({ ...formData, evidence: e.target.value })}
+              />
+            </div>
 
-          <div>
-            <label className="label">Remediation</label>
-            <textarea
-              required
-              className="input"
-              rows={4}
-              placeholder="Recommended steps to fix this vulnerability..."
-              value={formData.remediation}
-              onChange={(e) => setFormData({ ...formData, remediation: e.target.value })}
-            />
-          </div>
+            <div>
+              <label className="label">Remediation</label>
+              <textarea
+                required
+                className="input"
+                rows={4}
+                placeholder="Recommended steps to fix this vulnerability..."
+                value={formData.remediation}
+                onChange={(e) => setFormData({ ...formData, remediation: e.target.value })}
+              />
+            </div>
 
-          <div className="flex gap-3">
-            <Button type="submit" className="flex-1">
-              {editingFinding ? 'Update Finding' : 'Add Finding'}
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => {
-                setIsModalOpen(false)
-                setEditingFinding(null)
-              }}
-            >
-              Cancel
-            </Button>
-          </div>
-        </form>
-      </Modal>
+            <div className="flex gap-3">
+              <Button type="submit" className="flex-1">
+                {editingFinding ? 'Update Finding' : 'Add Finding'}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setIsModalOpen(false)
+                  setEditingFinding(null)
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </Modal>
       )}
 
       {/* Add/Edit IOC Modal */}
@@ -777,9 +777,16 @@ export default function ProjectDetail() {
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
         projectId={id || ''}
-        onSuccess={(count) => {
-          loadProject() // Refresh the IOC list
-        }}
+        onImportComplete={loadProject}
+      />
+
+      <ReportPreviewModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        project={currentProject}
+        findings={findings}
+        iocs={iocs}
+        ttps={currentProject.ttpMappings || []}
       />
     </div>
   )

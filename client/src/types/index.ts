@@ -28,6 +28,8 @@ export interface Project {
   createdBy: string
   createdAt: string
   updatedAt: string
+  iocs?: IOC[]
+  ttpMappings?: TTPMapping[]
 }
 
 // Finding types

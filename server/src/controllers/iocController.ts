@@ -2,7 +2,6 @@ import { Response, NextFunction } from 'express'
 import { AuthRequest } from '../middleware/auth.js'
 import { prisma } from '../utils/db.js'
 import { AppError } from '../middleware/errorHandler.js'
-import Anthropic from '@anthropic-ai/sdk'
 
 export const getIOCs = async (
   req: AuthRequest,
@@ -271,129 +270,26 @@ export const mapIOCColumns = async (
   next: NextFunction
 ) => {
   try {
-    const { columns, sampleData } = req.body
+    const { headers, sampleData } = req.body
 
-    // Validate inputs
-    if (!columns || !Array.isArray(columns)) {
-      throw new AppError('Columns must be an array of strings', 400)
+    // We don't strictly need project permission here just to map columns, 
+    // as no data is being saved yet. It's a utility function.
+
+    if (!headers || !Array.isArray(headers) || headers.length === 0) {
+      throw new AppError('Headers array is required', 400)
     }
 
     if (!sampleData || !Array.isArray(sampleData)) {
-      throw new AppError('Sample data must be an array', 400)
+      throw new AppError('Sample data array is required', 400)
     }
 
-    if (columns.length === 0) {
-      throw new AppError('Columns array cannot be empty', 400)
-    }
+    // Import lazily to avoid circular dependencies if any (though unlikely here)
+    const { aiAnalysisService } = await import('../services/aiAnalysisService.js')
 
-    // Validate columns are strings
-    if (!columns.every((h) => typeof h === 'string')) {
-      throw new AppError('All columns must be strings', 400)
-    }
+    const mapping = await aiAnalysisService.mapColumns(headers, sampleData)
 
-    // Initialize Anthropic client
-    const anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-    })
-
-    // Format sample data for the prompt
-    const sampleDataText = sampleData
-      .slice(0, 3)
-      .map((rowObj: Record<string, any>, idx: number) => {
-        const rowData = Object.entries(rowObj)
-          .map(([key, value]) => `  ${key}: ${value ?? 'null'}`)
-          .join('\n')
-        return `Row ${idx + 1}:\n${rowData}`
-      })
-      .join('\n\n')
-
-    // Build the prompt for Claude
-    const prompt = `You are analyzing spreadsheet columns for IOC (Indicator of Compromise) import.
-
-Available columns: ${JSON.stringify(columns)}
-
-Sample data (first ${Math.min(sampleData.length, 3)} rows):
-${sampleDataText}
-
-Map these columns to IOC fields:
-- type: IOC type (IP_ADDRESS, DOMAIN, URL, FILE_HASH, etc.)
-- value: The actual IOC value/indicator
-- timestamp: When the IOC was observed (date/time)
-- context: Optional context or description
-- source: Optional source information
-
-Return ONLY a JSON object with this structure:
-{
-  "mapping": {
-    "type": "column_name_or_null",
-    "value": "column_name_or_null",
-    "timestamp": "column_name_or_null",
-    "context": "column_name_or_null",
-    "source": "column_name_or_null"
-  },
-  "confidence": {
-    "type": 0.0,
-    "value": 0.0,
-    "timestamp": 0.0,
-    "context": 0.0,
-    "source": 0.0
-  }
-}
-
-Rules:
-- Set field to null if no appropriate column exists
-- Confidence scores should be between 0.0 and 1.0
-- Use actual column names from the columns array
-- Base your mapping on both column names and sample data content
-- Return ONLY the JSON object, no additional text`
-
-    // Call Claude API
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 2048,
-      temperature: 0.2,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-    })
-
-    // Extract response text
-    const responseText = message.content[0].type === 'text' ? message.content[0].text : ''
-
-    // Parse JSON response
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) {
-      throw new Error('No valid JSON found in AI response')
-    }
-
-    const mappingResult = JSON.parse(jsonMatch[0])
-
-    // Validate the structure
-    if (!mappingResult.mapping || !mappingResult.confidence) {
-      throw new Error('Invalid mapping structure returned by AI')
-    }
-
-    // Transform response to match frontend expected format
-    const mappings = Object.entries(mappingResult.mapping)
-      .filter(([_, sourceColumn]) => sourceColumn !== null)
-      .map(([targetField, sourceColumn]) => ({
-        sourceColumn: sourceColumn as string,
-        targetField: targetField as 'type' | 'value' | 'timestamp' | 'context' | 'source',
-        confidence: mappingResult.confidence[targetField] || 0.0,
-      }))
-
-    res.json({
-      mappings,
-      suggestions: {}, // Can be populated with alternative mapping suggestions in the future
-    })
-  } catch (error: any) {
-    if (error instanceof AppError) {
-      next(error)
-    } else {
-      next(new AppError(`Column mapping failed: ${error.message}`, 500))
-    }
+    res.json(mapping)
+  } catch (error) {
+    next(error)
   }
 }

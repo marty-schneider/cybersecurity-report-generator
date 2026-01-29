@@ -9,6 +9,7 @@ import Button from '../components/common/Button'
 import LoadingSkeleton from '../components/LoadingSkeleton'
 import IOCImportModal from '../components/ioc/IOCImportModal'
 import { getIOCTypeBadgeClass, getSeverityColor } from '../constants/badgeColors'
+import ReactMarkdown from 'react-markdown'
 
 export default function ThreatAnalysis() {
   const { id: projectId } = useParams<{ id: string }>()
@@ -387,9 +388,7 @@ export default function ThreatAnalysis() {
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
         projectId={projectId || ''}
-        onSuccess={(count) => {
-          loadData() // Refresh the IOC list
-        }}
+        onImportComplete={loadData}
       />
     </div>
   )

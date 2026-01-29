@@ -158,7 +158,7 @@ export default function Dashboard() {
       <ProjectModal
         isOpen={isNewProjectModalOpen}
         onClose={() => setIsNewProjectModalOpen(false)}
-        onSuccess={(project) => {
+        onProjectCreated={(project) => {
           setIsNewProjectModalOpen(false)
           navigate(`/projects/${project.id}`)
         }}
