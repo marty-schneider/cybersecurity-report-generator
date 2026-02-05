@@ -93,9 +93,10 @@ export class ReportGenerationService {
       const templateSource = readFileSync(templatePath, 'utf-8')
       this.template = Handlebars.compile(templateSource)
       logger.info('Report template loaded successfully')
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
       logger.error('Failed to load report template:', error)
-      throw new Error(`Failed to load report template: ${error.message}`)
+      throw new Error(`Failed to load report template: ${message}`)
     }
   }
 
@@ -125,9 +126,10 @@ export class ReportGenerationService {
 
       logger.info('Report generated successfully')
       return html
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
       logger.error('Report generation failed:', error)
-      throw new Error(`Report generation failed: ${error.message}`)
+      throw new Error(`Report generation failed: ${message}`)
     }
   }
 
@@ -427,6 +429,7 @@ export class ReportGenerationService {
       VULN_ASSESSMENT: 'Vulnerability Assessment',
       SECURITY_AUDIT: 'Security Audit',
       RED_TEAM: 'Red Team Exercise',
+      INCIDENT_RESPONSE: 'Incident Response',
     }
     return formats[type] || type
   }

@@ -5,37 +5,21 @@ import { AppError } from '../middleware/errorHandler.js'
 import { aiAnalysisService } from '../services/aiAnalysisService.js'
 import { mitreAttackService } from '../services/mitreAttackService.js'
 import { logger } from '../utils/logger.js'
+import { verifyProjectAccess, verifyResourceAccess, ProjectRequest } from '../middleware/projectAccess.js'
+import { IOC } from '@prisma/client'
 
 export const getTTPs = async (
-  req: AuthRequest,
+  req: ProjectRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const { projectId } = req.query
-    const userId = req.user!.id
+    await verifyProjectAccess(req, 'read')
 
-    if (!projectId) {
-      throw new AppError('Project ID is required', 400)
-    }
-
-    // Verify user has access to project
-    const project = await prisma.project.findFirst({
-      where: {
-        id: projectId as string,
-        OR: [
-          { createdBy: userId },
-          { members: { some: { userId } } },
-        ],
-      },
-    })
-
-    if (!project) {
-      throw new AppError('Project not found or access denied', 404)
-    }
+    const projectId = req.query.projectId as string
 
     const ttps = await prisma.tTPMapping.findMany({
-      where: { projectId: projectId as string },
+      where: { projectId },
       orderBy: {
         confidence: 'desc',
       },
@@ -48,37 +32,13 @@ export const getTTPs = async (
 }
 
 export const analyzeTTPs = async (
-  req: AuthRequest,
+  req: ProjectRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const { projectId } = req.body
-    const userId = req.user!.id
-
-    if (!projectId) {
-      throw new AppError('Project ID is required', 400)
-    }
-
-    // Verify user has access to project
-    const project = await prisma.project.findFirst({
-      where: {
-        id: projectId,
-        OR: [
-          { createdBy: userId },
-          { members: { some: { userId, role: { in: ['OWNER', 'EDITOR'] } } } },
-        ],
-      },
-      select: {
-        name: true,
-        clientName: true,
-        assessmentType: true,
-      },
-    })
-
-    if (!project) {
-      throw new AppError('Project not found or insufficient permissions', 404)
-    }
+    const project = await verifyProjectAccess(req, 'write')
+    const projectId = req.body.projectId as string
 
     // Get all IOCs for the project
     const iocs = await prisma.iOC.findMany({
@@ -112,10 +72,10 @@ export const analyzeTTPs = async (
           return null
         }
 
-        // Extract IOC IDs mentioned in the reasoning (simplified approach)
+        // Extract IOC IDs mentioned in the reasoning
         const iocIds = iocs
-          .filter((ioc: any) => ttp.reasoning.toLowerCase().includes(ioc.value.toLowerCase()))
-          .map((ioc: any) => ioc.id)
+          .filter((ioc: IOC) => ttp.reasoning.toLowerCase().includes(ioc.value.toLowerCase()))
+          .map((ioc: IOC) => ioc.id)
 
         return prisma.tTPMapping.create({
           data: {
@@ -137,7 +97,6 @@ export const analyzeTTPs = async (
 
     logger.info(`Created ${validMappings.length} TTP mappings for project ${projectId}`)
 
-    // Return complete analysis result
     res.json({
       success: true,
       analysis: {
@@ -201,22 +160,7 @@ export const deleteTTPMapping = async (
     const { id } = req.params
     const userId = req.user!.id
 
-    // Verify user has access
-    const existing = await prisma.tTPMapping.findFirst({
-      where: {
-        id,
-        project: {
-          OR: [
-            { createdBy: userId },
-            { members: { some: { userId, role: { in: ['OWNER', 'EDITOR'] } } } },
-          ],
-        },
-      },
-    })
-
-    if (!existing) {
-      throw new AppError('TTP mapping not found or insufficient permissions', 404)
-    }
+    await verifyResourceAccess(userId, id, prisma.tTPMapping, 'write')
 
     await prisma.tTPMapping.delete({ where: { id } })
 

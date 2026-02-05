@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useProjectStore } from '../store/projectStore'
 import { projectService } from '../services/projectService'
-import { AssessmentType, Project } from '../types'
+import { Project } from '../types'
 import Button from '../components/common/Button'
 import ProjectModal from '../components/project/ProjectModal'
+import { AssessmentTypeBadge } from '../components/badges'
+import { notify } from '../store/notificationStore'
 
 export default function ProjectList() {
   const { projects, setProjects } = useProjectStore()
@@ -20,8 +22,8 @@ export default function ProjectList() {
       setLoading(true)
       const data = await projectService.getAll()
       setProjects(data)
-    } catch (err) {
-      console.error('Failed to load projects:', err)
+    } catch {
+      notify.error('Failed to load projects')
     } finally {
       setLoading(false)
     }
@@ -30,28 +32,6 @@ export default function ProjectList() {
   const handleProjectCreated = (newProject: Project) => {
     setProjects([newProject, ...projects])
     setIsModalOpen(false)
-  }
-
-  const getAssessmentTypeBadge = (type: AssessmentType) => {
-    const colors = {
-      PENTEST: 'bg-purple-100 text-purple-700',
-      VULN_ASSESSMENT: 'bg-blue-100 text-blue-700',
-      SECURITY_AUDIT: 'bg-green-100 text-green-700',
-      RED_TEAM: 'bg-red-100 text-red-700',
-      INCIDENT_RESPONSE: 'bg-orange-100 text-orange-700',
-    }
-    const labels: Record<string, string> = {
-      PENTEST: 'Penetration Test',
-      VULN_ASSESSMENT: 'Vulnerability Assessment',
-      SECURITY_AUDIT: 'Security Audit',
-      RED_TEAM: 'Red Team',
-      INCIDENT_RESPONSE: 'Incident Response',
-    }
-    return (
-      <span className={`px-2 py-1 rounded text-xs font-medium ${colors[type]}`}>
-        {labels[type]}
-      </span>
-    )
   }
 
   if (loading) {
@@ -83,7 +63,7 @@ export default function ProjectList() {
               <div className="card hover:shadow-md transition-shadow cursor-pointer">
                 <div className="flex justify-between items-start mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">{project.name}</h3>
-                  {getAssessmentTypeBadge(project.assessmentType)}
+                  <AssessmentTypeBadge type={project.assessmentType} />
                 </div>
                 <p className="text-sm text-gray-600 mb-4">Client: {project.clientName}</p>
                 <div className="flex justify-between text-xs text-gray-500">

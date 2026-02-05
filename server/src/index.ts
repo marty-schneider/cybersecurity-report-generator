@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
+import rateLimit from 'express-rate-limit'
 import dotenv from 'dotenv'
 import { errorHandler } from './middleware/errorHandler.js'
 import { logger } from './utils/logger.js'
@@ -61,6 +62,33 @@ app.use(cors({
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
+// Rate limiting - general API limiter
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per window
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' },
+})
+
+// Strict rate limiter for AI-powered endpoints (expensive API calls)
+const aiLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10, // 10 AI analysis requests per hour
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'AI analysis rate limit reached. Please try again later.' },
+})
+
+// Auth rate limiter (prevent brute force)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // 20 login attempts per 15 minutes
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many authentication attempts, please try again later.' },
+})
+
 // Request logging
 app.use((req, res, next) => {
   logger.info(`${req.method} ${req.path}`)
@@ -73,12 +101,12 @@ app.get('/health', (req, res) => {
 })
 
 // API Routes
-app.use('/api/auth', authRoutes)
-app.use('/api/projects', projectRoutes)
-app.use('/api/findings', findingRoutes)
-app.use('/api/iocs', iocRoutes)
-app.use('/api/ttps', ttpRoutes)
-app.use('/api/reports', reportRoutes)
+app.use('/api/auth', authLimiter, authRoutes)
+app.use('/api/projects', apiLimiter, projectRoutes)
+app.use('/api/findings', apiLimiter, findingRoutes)
+app.use('/api/iocs', apiLimiter, iocRoutes)
+app.use('/api/ttps', aiLimiter, ttpRoutes)
+app.use('/api/reports', aiLimiter, reportRoutes)
 
 // Error handling
 app.use(errorHandler)

@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express'
 import { AuthRequest } from '../middleware/auth.js'
 import { prisma } from '../utils/db.js'
 import { AppError } from '../middleware/errorHandler.js'
+import { Prisma } from '@prisma/client'
 
 export const getAllProjects = async (
   req: AuthRequest,
@@ -163,7 +164,7 @@ export const updateProject = async (
     const userId = req.user!.id
     const { name, clientName, assessmentType, startDate, endDate, status } = req.body
 
-    // Check if user has permission
+    // Check if user has write permission
     const existing = await prisma.project.findFirst({
       where: {
         id,
@@ -178,7 +179,7 @@ export const updateProject = async (
       throw new AppError('Project not found or insufficient permissions', 404)
     }
 
-    const updateData: any = {}
+    const updateData: Prisma.ProjectUpdateInput = {}
     if (name) updateData.name = name
     if (clientName) updateData.clientName = clientName
     if (assessmentType) updateData.assessmentType = assessmentType

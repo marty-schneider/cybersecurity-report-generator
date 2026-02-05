@@ -2,37 +2,21 @@ import { Response, NextFunction } from 'express'
 import { AuthRequest } from '../middleware/auth.js'
 import { prisma } from '../utils/db.js'
 import { AppError } from '../middleware/errorHandler.js'
+import { verifyProjectAccess, verifyResourceAccess, ProjectRequest } from '../middleware/projectAccess.js'
+import { Prisma } from '@prisma/client'
 
 export const getFindings = async (
-  req: AuthRequest,
+  req: ProjectRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const { projectId } = req.query
-    const userId = req.user!.id
+    await verifyProjectAccess(req, 'read')
 
-    if (!projectId) {
-      throw new AppError('Project ID is required', 400)
-    }
-
-    // Verify user has access to project
-    const project = await prisma.project.findFirst({
-      where: {
-        id: projectId as string,
-        OR: [
-          { createdBy: userId },
-          { members: { some: { userId } } },
-        ],
-      },
-    })
-
-    if (!project) {
-      throw new AppError('Project not found or access denied', 404)
-    }
+    const projectId = (req.query.projectId ?? req.body.projectId) as string
 
     const findings = await prisma.finding.findMany({
-      where: { projectId: projectId as string },
+      where: { projectId },
       include: {
         assignee: {
           select: {
@@ -63,36 +47,7 @@ export const getFinding = async (
     const { id } = req.params
     const userId = req.user!.id
 
-    const finding = await prisma.finding.findFirst({
-      where: {
-        id,
-        project: {
-          OR: [
-            { createdBy: userId },
-            { members: { some: { userId } } },
-          ],
-        },
-      },
-      include: {
-        assignee: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        project: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-    })
-
-    if (!finding) {
-      throw new AppError('Finding not found', 404)
-    }
+    const finding = await verifyResourceAccess(userId, id, prisma.finding, 'read')
 
     res.json(finding)
   } catch (error) {
@@ -101,12 +56,11 @@ export const getFinding = async (
 }
 
 export const createFinding = async (
-  req: AuthRequest,
+  req: ProjectRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const userId = req.user!.id
     const {
       projectId,
       title,
@@ -119,27 +73,14 @@ export const createFinding = async (
       assignedTo,
     } = req.body
 
-    if (!projectId || !title || !description || !severity || !remediation) {
+    if (!title || !description || !severity || !remediation) {
       throw new AppError(
-        'Project ID, title, description, severity, and remediation are required',
+        'Title, description, severity, and remediation are required',
         400
       )
     }
 
-    // Verify user has access to project
-    const project = await prisma.project.findFirst({
-      where: {
-        id: projectId,
-        OR: [
-          { createdBy: userId },
-          { members: { some: { userId, role: { in: ['OWNER', 'EDITOR'] } } } },
-        ],
-      },
-    })
-
-    if (!project) {
-      throw new AppError('Project not found or insufficient permissions', 404)
-    }
+    await verifyProjectAccess(req, 'write')
 
     const finding = await prisma.finding.create({
       data: {
@@ -190,24 +131,9 @@ export const updateFinding = async (
       assignedTo,
     } = req.body
 
-    // Verify user has access
-    const existing = await prisma.finding.findFirst({
-      where: {
-        id,
-        project: {
-          OR: [
-            { createdBy: userId },
-            { members: { some: { userId, role: { in: ['OWNER', 'EDITOR'] } } } },
-          ],
-        },
-      },
-    })
+    await verifyResourceAccess(userId, id, prisma.finding, 'write')
 
-    if (!existing) {
-      throw new AppError('Finding not found or insufficient permissions', 404)
-    }
-
-    const updateData: any = {}
+    const updateData: Prisma.FindingUpdateInput = {}
     if (title) updateData.title = title
     if (description) updateData.description = description
     if (severity) updateData.severity = severity
@@ -247,22 +173,7 @@ export const deleteFinding = async (
     const { id } = req.params
     const userId = req.user!.id
 
-    // Verify user has access
-    const existing = await prisma.finding.findFirst({
-      where: {
-        id,
-        project: {
-          OR: [
-            { createdBy: userId },
-            { members: { some: { userId, role: { in: ['OWNER', 'EDITOR'] } } } },
-          ],
-        },
-      },
-    })
-
-    if (!existing) {
-      throw new AppError('Finding not found or insufficient permissions', 404)
-    }
+    await verifyResourceAccess(userId, id, prisma.finding, 'write')
 
     await prisma.finding.delete({ where: { id } })
 

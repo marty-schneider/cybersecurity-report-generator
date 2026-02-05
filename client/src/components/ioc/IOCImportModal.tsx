@@ -5,6 +5,7 @@ import { iocService } from '../../services/iocService'
 import { aiMappingService } from '../../services/aiMappingService'
 import Modal from '../common/Modal'
 import Button from '../common/Button'
+import { notify } from '../../store/notificationStore'
 
 interface IOCImportModalProps {
     isOpen: boolean
@@ -25,19 +26,14 @@ const REQUIRED_FIELDS = ['type', 'value', 'timestamp']
 
 export default function IOCImportModal({ isOpen, onClose, projectId, onImportComplete }: IOCImportModalProps) {
     const fileInputRef = useRef<HTMLInputElement>(null)
-    const [step, setStep] = useState<'UPLOAD' | 'MAPPING' | 'REVIEW' | 'IMPORTING'>('UPLOAD')
-    const [fileData, setFileData] = useState<any[]>([])
+    const [step, setStep] = useState<'UPLOAD' | 'MAPPING' | 'IMPORTING'>('UPLOAD')
+    const [fileData, setFileData] = useState<Record<string, unknown>[]>([])
     const [headers, setHeaders] = useState<string[]>([])
     const [mapping, setMapping] = useState<ColumnMapping>({
-        type: null,
-        value: null,
-        timestamp: null,
-        context: null,
-        source: null,
+        type: null, value: null, timestamp: null, context: null, source: null,
     })
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
-    const [importStats, setImportStats] = useState({ total: 0, distinct: 0 })
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -54,7 +50,6 @@ export default function IOCImportModal({ isOpen, onClose, projectId, onImportCom
             setHeaders(fileHeaders)
             setFileData(data)
 
-            // Get AI mapping suggestion
             const sampleData = data.slice(0, 5).map(row => Object.values(row))
 
             try {
@@ -66,10 +61,9 @@ export default function IOCImportModal({ isOpen, onClose, projectId, onImportCom
                     context: suggestion.context || null,
                     source: suggestion.source || null,
                 })
-            } catch (err) {
-                console.warn('AI mapping failed, falling back to manual mapping', err)
+            } catch {
                 // Fallback: try to match headers case-insensitively
-                const newMapping: any = { ...mapping }
+                const newMapping: ColumnMapping = { type: null, value: null, timestamp: null, context: null, source: null }
                 fileHeaders.forEach(h => {
                     const lower = h.toLowerCase()
                     if (lower.includes('type')) newMapping.type = h
@@ -82,14 +76,15 @@ export default function IOCImportModal({ isOpen, onClose, projectId, onImportCom
             }
 
             setStep('MAPPING')
-        } catch (err: any) {
-            setError(err.message || 'Failed to parse file')
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Failed to parse file'
+            setError(message)
         } finally {
             setLoading(false)
         }
     }
 
-    const parseFile = (file: File): Promise<any[]> => {
+    const parseFile = (file: File): Promise<Record<string, unknown>[]> => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader()
             reader.onload = (e) => {
@@ -99,7 +94,7 @@ export default function IOCImportModal({ isOpen, onClose, projectId, onImportCom
                     const sheetName = workbook.SheetNames[0]
                     const sheet = workbook.Sheets[sheetName]
                     const json = XLSX.utils.sheet_to_json(sheet)
-                    resolve(json)
+                    resolve(json as Record<string, unknown>[])
                 } catch (err) {
                     reject(err)
                 }
@@ -130,38 +125,30 @@ export default function IOCImportModal({ isOpen, onClose, projectId, onImportCom
         setError('')
 
         try {
-            // Transform data
             const iocs = fileData.map(row => {
-                // Attempt to normalize type
                 let typeStr = String(row[mapping.type!]).toUpperCase().replace(/ /g, '_')
-                // Basic normalization or fallback
-                // In a real app, might need more robust type detection/validation
                 if (!isValidIOCType(typeStr)) {
-                    // Try to infer from value if type is invalid/missing
-                    // For now, default to 'IP_ADDRESS' or skip?
-                    // Let's default to UNKNOWN or handle error. 
-                    // Since strict typing, let's try to map common names
                     if (typeStr.includes('IP')) typeStr = 'IP_ADDRESS'
                     else if (typeStr.includes('URL')) typeStr = 'URL'
                     else if (typeStr.includes('DOMAIN')) typeStr = 'DOMAIN'
                     else if (typeStr.includes('MD5')) typeStr = 'FILE_HASH_MD5'
                     else if (typeStr.includes('SHA256')) typeStr = 'FILE_HASH_SHA256'
                     else if (typeStr.includes('EMAIL')) typeStr = 'EMAIL'
-                    else typeStr = 'IP_ADDRESS' // Fallback for MVP
+                    else typeStr = 'IP_ADDRESS'
                 }
 
                 return {
                     type: typeStr as IOCType,
                     value: String(row[mapping.value!]),
-                    timestamp: new Date(row[mapping.timestamp!]).toISOString(),
+                    timestamp: new Date(row[mapping.timestamp!] as string).toISOString(),
                     context: mapping.context ? String(row[mapping.context]) : undefined,
                     source: mapping.source ? String(row[mapping.source]) : undefined,
                 }
-            }).filter(ioc => ioc.value && ioc.type) // Basic filter
+            }).filter(ioc => ioc.value && ioc.type)
 
             await iocService.bulkCreate({ projectId, iocs })
 
-            setImportStats({ total: iocs.length, distinct: iocs.length }) // Server should return this ideally
+            notify.success(`Successfully imported ${iocs.length} IOCs`)
             onImportComplete()
             onClose()
 
@@ -170,10 +157,10 @@ export default function IOCImportModal({ isOpen, onClose, projectId, onImportCom
             setFileData([])
             setHeaders([])
             setMapping({ type: null, value: null, timestamp: null, context: null, source: null })
-
-        } catch (err: any) {
-            console.error('Import failed', err)
-            setError(err.response?.data?.message || 'Failed to import IOCs')
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Failed to import IOCs'
+            notify.error(message)
+            setError(message)
             setStep('MAPPING')
         } finally {
             setLoading(false)
@@ -240,15 +227,15 @@ export default function IOCImportModal({ isOpen, onClose, projectId, onImportCom
                         </p>
 
                         <div className="grid grid-cols-2 gap-4">
-                            {['type', 'value', 'timestamp', 'context', 'source'].map((field) => (
+                            {(['type', 'value', 'timestamp', 'context', 'source'] as const).map((field) => (
                                 <div key={field}>
                                     <label className="label capitalize">
                                         {field} {REQUIRED_FIELDS.includes(field) && <span className="text-red-500">*</span>}
                                     </label>
                                     <select
                                         className="input"
-                                        value={mapping[field as keyof ColumnMapping] || ''}
-                                        onChange={(e) => handleMappingChange(field as keyof ColumnMapping, e.target.value)}
+                                        value={mapping[field] || ''}
+                                        onChange={(e) => handleMappingChange(field, e.target.value)}
                                     >
                                         <option value="">-- Select Column --</option>
                                         {headers.map(h => (
