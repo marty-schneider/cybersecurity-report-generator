@@ -1,56 +1,32 @@
-import { Request, Response } from 'express'
+import { Response } from 'express'
 import { reportGenerationService } from '../services/reportGenerationService.js'
 import { logger } from '../utils/logger.js'
 import { prisma } from '../utils/db.js'
+import { verifyProjectAccess, ProjectRequest } from '../middleware/projectAccess.js'
+import { AuthRequest } from '../middleware/auth.js'
 
 export class ReportController {
   /**
    * Generate assessment report for a project
    * POST /api/reports/generate
    */
-  async generateReport(req: Request, res: Response) {
+  async generateReport(req: ProjectRequest, res: Response) {
     try {
-      const { projectId } = req.body
-      const userId = (req as any).user.id
-
-      if (!projectId) {
-        return res.status(400).json({ error: 'Project ID is required' })
-      }
-
-      // Verify user has access to project
-      const project = await prisma.project.findFirst({
-        where: {
-          id: projectId,
-          OR: [
-            { createdBy: userId },
-            {
-              members: {
-                some: {
-                  userId: userId,
-                },
-              },
-            },
-          ],
-        },
-      })
-
-      if (!project) {
-        return res.status(404).json({ error: 'Project not found or access denied' })
-      }
+      await verifyProjectAccess(req, 'read')
+      const projectId = req.body.projectId as string
+      const userId = req.user!.id
 
       logger.info(`Generating report for project ${projectId} by user ${userId}`)
 
-      // Generate the report HTML
       const reportHtml = await reportGenerationService.generateReport(projectId)
 
-      // Save report metadata to database
       const report = await prisma.report.create({
         data: {
-          projectId: projectId,
+          projectId,
           templateId: 'default',
           generatedBy: userId,
           exportFormat: 'PDF',
-          fileUrl: '', // We're returning HTML directly, not storing files
+          fileUrl: '',
         },
       })
 
@@ -60,11 +36,12 @@ export class ReportController {
         html: reportHtml,
         generatedAt: report.createdAt,
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
       logger.error('Report generation error:', error)
       res.status(500).json({
         error: 'Failed to generate report',
-        message: error.message,
+        message,
       })
     }
   }
@@ -73,24 +50,18 @@ export class ReportController {
    * Get existing report
    * GET /api/reports/:id
    */
-  async getReport(req: Request, res: Response) {
+  async getReport(req: AuthRequest, res: Response) {
     try {
       const { id } = req.params
-      const userId = (req as any).user.id
+      const userId = req.user!.id
 
       const report = await prisma.report.findFirst({
         where: {
-          id: id,
+          id,
           project: {
             OR: [
               { createdBy: userId },
-              {
-                members: {
-                  some: {
-                    userId: userId,
-                  },
-                },
-              },
+              { members: { some: { userId } } },
             ],
           },
         },
@@ -103,7 +74,6 @@ export class ReportController {
         return res.status(404).json({ error: 'Report not found or access denied' })
       }
 
-      // Regenerate the report HTML
       const reportHtml = await reportGenerationService.generateReport(report.projectId)
 
       res.json({
@@ -117,11 +87,12 @@ export class ReportController {
         },
         generatedAt: report.createdAt,
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
       logger.error('Get report error:', error)
       res.status(500).json({
         error: 'Failed to retrieve report',
-        message: error.message,
+        message,
       })
     }
   }
@@ -130,43 +101,14 @@ export class ReportController {
    * List reports for a project
    * GET /api/reports?projectId=xxx
    */
-  async listReports(req: Request, res: Response) {
+  async listReports(req: ProjectRequest, res: Response) {
     try {
-      const { projectId } = req.query
-      const userId = (req as any).user.id
-
-      if (!projectId || typeof projectId !== 'string') {
-        return res.status(400).json({ error: 'Project ID is required' })
-      }
-
-      // Verify access
-      const project = await prisma.project.findFirst({
-        where: {
-          id: projectId,
-          OR: [
-            { createdBy: userId },
-            {
-              members: {
-                some: {
-                  userId: userId,
-                },
-              },
-            },
-          ],
-        },
-      })
-
-      if (!project) {
-        return res.status(404).json({ error: 'Project not found or access denied' })
-      }
+      await verifyProjectAccess(req, 'read')
+      const projectId = req.query.projectId as string
 
       const reports = await prisma.report.findMany({
-        where: {
-          projectId: projectId,
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
+        where: { projectId },
+        orderBy: { createdAt: 'desc' },
         select: {
           id: true,
           createdAt: true,
@@ -179,11 +121,12 @@ export class ReportController {
         success: true,
         reports,
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
       logger.error('List reports error:', error)
       res.status(500).json({
         error: 'Failed to list reports',
-        message: error.message,
+        message,
       })
     }
   }

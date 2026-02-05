@@ -134,9 +134,10 @@ export class ReportAssessmentService {
 
       logger.info('Report assessment generated successfully')
       return assessment
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
       logger.error('Report assessment generation failed:', error)
-      throw new Error(`Report assessment failed: ${error.message}`)
+      throw new Error(`Report assessment failed: ${message}`)
     }
   }
 
@@ -436,7 +437,7 @@ ${ttpList}`
         recommendations: parsed.recommendations || [],
         maturityDistribution,
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to parse AI assessment response:', error)
       logger.debug('Response text:', responseText)
 

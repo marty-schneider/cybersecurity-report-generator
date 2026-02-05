@@ -5,6 +5,7 @@ import { Project } from '../types'
 import LoadingSkeleton from '../components/LoadingSkeleton'
 import { getProjectStatusClass } from '../constants/badgeColors'
 import ProjectModal from '../components/project/ProjectModal'
+import { notify } from '../store/notificationStore'
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -28,7 +29,6 @@ export default function Dashboard() {
       const projectsData = await projectService.getAll()
       setProjects(projectsData)
 
-      // Calculate stats
       const activeCount = projectsData.filter((p) => p.status === 'ACTIVE').length
       const findingsCount = projectsData.reduce((sum, p: any) => sum + (p._count?.findings || 0), 0)
       const iocsCount = projectsData.reduce((sum, p: any) => sum + (p._count?.iocs || 0), 0)
@@ -37,11 +37,10 @@ export default function Dashboard() {
         activeProjects: activeCount,
         totalFindings: findingsCount,
         iocsAnalyzed: iocsCount,
-        criticalFindings: 0, // Would need to fetch findings to get this
+        criticalFindings: 0,
       })
-    } catch (error: any) {
-      console.error('Failed to load dashboard:', error)
-      console.error('Error details:', error.response?.data || error.message)
+    } catch {
+      notify.error('Failed to load dashboard')
       setProjects([])
     } finally {
       setLoading(false)

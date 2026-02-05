@@ -3,6 +3,7 @@ import Modal from '../common/Modal'
 import Button from '../common/Button'
 import { Project } from '../../types'
 import reportService from '../../services/reportService'
+import { notify } from '../../store/notificationStore'
 
 interface ReportPreviewModalProps {
     isOpen: boolean
@@ -32,9 +33,9 @@ export default function ReportPreviewModal({
             setError(null)
             const response = await reportService.generateReport(project.id)
             setReportHtml(response.html)
-        } catch (err: any) {
-            console.error('Failed to generate report:', err)
+        } catch {
             setError('Failed to generate report. Please try again.')
+            notify.error('Failed to generate report')
         } finally {
             setLoading(false)
         }

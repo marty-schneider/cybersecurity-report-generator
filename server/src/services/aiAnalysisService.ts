@@ -58,9 +58,10 @@ export class AIAnalysisService {
       logger.info('AI analysis completed successfully')
 
       return result
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
       logger.error('AI analysis failed:', error)
-      throw new Error(`AI analysis failed: ${error.message}`)
+      throw new Error(`AI analysis failed: ${message}`)
     }
   }
 
@@ -181,7 +182,7 @@ Analyze these IOCs now:`
         threatActorProfile: parsed.threatActorProfile,
         recommendations: Array.isArray(parsed.recommendations) ? parsed.recommendations : [],
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to parse AI response:', error)
 
       // Fallback: return the raw response as narrative
@@ -194,7 +195,7 @@ Analyze these IOCs now:`
     }
   }
 
-  async enrichIOC(ioc: IOCData): Promise<any> {
+  async enrichIOC(ioc: IOCData): Promise<{ aiAnalysis: string; enrichedAt: Date } | null> {
     try {
       const prompt = `You are a cybersecurity threat intelligence analyst.
 
@@ -223,13 +224,13 @@ Keep your response concise (2-3 paragraphs).`
         aiAnalysis: analysis,
         enrichedAt: new Date(),
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('IOC enrichment failed:', error)
       return null
     }
   }
 
-  async mapColumns(headers: string[], sampleData: any[]): Promise<Record<string, string>> {
+  async mapColumns(headers: string[], sampleData: unknown[]): Promise<Record<string, string>> {
     try {
       const prompt = `You are a data mapping assistant. I have a dataset of Indicators of Compromise (IOCs) with the following headers:
 ${JSON.stringify(headers)}
@@ -276,9 +277,10 @@ IMPORTANT:
       }
 
       return JSON.parse(jsonMatch[0])
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
       logger.error('Column mapping failed:', error)
-      throw new Error(`Column mapping failed: ${error.message}`)
+      throw new Error(`Column mapping failed: ${message}`)
     }
   }
 }

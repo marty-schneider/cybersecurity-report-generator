@@ -2,37 +2,21 @@ import { Response, NextFunction } from 'express'
 import { AuthRequest } from '../middleware/auth.js'
 import { prisma } from '../utils/db.js'
 import { AppError } from '../middleware/errorHandler.js'
+import { verifyProjectAccess, verifyResourceAccess, ProjectRequest } from '../middleware/projectAccess.js'
+import { Prisma } from '@prisma/client'
 
 export const getIOCs = async (
-  req: AuthRequest,
+  req: ProjectRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const { projectId } = req.query
-    const userId = req.user!.id
+    await verifyProjectAccess(req, 'read')
 
-    if (!projectId) {
-      throw new AppError('Project ID is required', 400)
-    }
-
-    // Verify user has access to project
-    const project = await prisma.project.findFirst({
-      where: {
-        id: projectId as string,
-        OR: [
-          { createdBy: userId },
-          { members: { some: { userId } } },
-        ],
-      },
-    })
-
-    if (!project) {
-      throw new AppError('Project not found or access denied', 404)
-    }
+    const projectId = (req.query.projectId ?? req.body.projectId) as string
 
     const iocs = await prisma.iOC.findMany({
-      where: { projectId: projectId as string },
+      where: { projectId },
       orderBy: {
         timestamp: 'desc',
       },
@@ -53,29 +37,7 @@ export const getIOC = async (
     const { id } = req.params
     const userId = req.user!.id
 
-    const ioc = await prisma.iOC.findFirst({
-      where: {
-        id,
-        project: {
-          OR: [
-            { createdBy: userId },
-            { members: { some: { userId } } },
-          ],
-        },
-      },
-      include: {
-        project: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-    })
-
-    if (!ioc) {
-      throw new AppError('IOC not found', 404)
-    }
+    const ioc = await verifyResourceAccess(userId, id, prisma.iOC, 'read')
 
     res.json(ioc)
   } catch (error) {
@@ -84,32 +46,18 @@ export const getIOC = async (
 }
 
 export const createIOC = async (
-  req: AuthRequest,
+  req: ProjectRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const userId = req.user!.id
     const { projectId, type, value, timestamp, context, source } = req.body
 
-    if (!projectId || !type || !value || !timestamp) {
-      throw new AppError('Project ID, type, value, and timestamp are required', 400)
+    if (!type || !value || !timestamp) {
+      throw new AppError('Type, value, and timestamp are required', 400)
     }
 
-    // Verify user has access to project
-    const project = await prisma.project.findFirst({
-      where: {
-        id: projectId,
-        OR: [
-          { createdBy: userId },
-          { members: { some: { userId, role: { in: ['OWNER', 'EDITOR'] } } } },
-        ],
-      },
-    })
-
-    if (!project) {
-      throw new AppError('Project not found or insufficient permissions', 404)
-    }
+    await verifyProjectAccess(req, 'write')
 
     const ioc = await prisma.iOC.create({
       data: {
@@ -129,32 +77,18 @@ export const createIOC = async (
 }
 
 export const bulkCreateIOCs = async (
-  req: AuthRequest,
+  req: ProjectRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const userId = req.user!.id
     const { projectId, iocs } = req.body
 
-    if (!projectId || !iocs || !Array.isArray(iocs) || iocs.length === 0) {
-      throw new AppError('Project ID and array of IOCs are required', 400)
+    if (!iocs || !Array.isArray(iocs) || iocs.length === 0) {
+      throw new AppError('Array of IOCs is required', 400)
     }
 
-    // Verify user has access to project
-    const project = await prisma.project.findFirst({
-      where: {
-        id: projectId,
-        OR: [
-          { createdBy: userId },
-          { members: { some: { userId, role: { in: ['OWNER', 'EDITOR'] } } } },
-        ],
-      },
-    })
-
-    if (!project) {
-      throw new AppError('Project not found or insufficient permissions', 404)
-    }
+    await verifyProjectAccess(req, 'write')
 
     // Validate all IOCs
     for (const ioc of iocs) {
@@ -163,9 +97,8 @@ export const bulkCreateIOCs = async (
       }
     }
 
-    // Create all IOCs
     const createdIOCs = await prisma.iOC.createMany({
-      data: iocs.map((ioc: any) => ({
+      data: iocs.map((ioc: { type: string; value: string; timestamp: string; context?: string; source?: string }) => ({
         projectId,
         type: ioc.type,
         value: ioc.value,
@@ -194,24 +127,9 @@ export const updateIOC = async (
     const userId = req.user!.id
     const { type, value, timestamp, context, source, enrichmentData } = req.body
 
-    // Verify user has access
-    const existing = await prisma.iOC.findFirst({
-      where: {
-        id,
-        project: {
-          OR: [
-            { createdBy: userId },
-            { members: { some: { userId, role: { in: ['OWNER', 'EDITOR'] } } } },
-          ],
-        },
-      },
-    })
+    await verifyResourceAccess(userId, id, prisma.iOC, 'write')
 
-    if (!existing) {
-      throw new AppError('IOC not found or insufficient permissions', 404)
-    }
-
-    const updateData: any = {}
+    const updateData: Prisma.IOCUpdateInput = {}
     if (type) updateData.type = type
     if (value) updateData.value = value
     if (timestamp) updateData.timestamp = new Date(timestamp)
@@ -239,22 +157,7 @@ export const deleteIOC = async (
     const { id } = req.params
     const userId = req.user!.id
 
-    // Verify user has access
-    const existing = await prisma.iOC.findFirst({
-      where: {
-        id,
-        project: {
-          OR: [
-            { createdBy: userId },
-            { members: { some: { userId, role: { in: ['OWNER', 'EDITOR'] } } } },
-          ],
-        },
-      },
-    })
-
-    if (!existing) {
-      throw new AppError('IOC not found or insufficient permissions', 404)
-    }
+    await verifyResourceAccess(userId, id, prisma.iOC, 'write')
 
     await prisma.iOC.delete({ where: { id } })
 
@@ -272,9 +175,6 @@ export const mapIOCColumns = async (
   try {
     const { headers, sampleData } = req.body
 
-    // We don't strictly need project permission here just to map columns, 
-    // as no data is being saved yet. It's a utility function.
-
     if (!headers || !Array.isArray(headers) || headers.length === 0) {
       throw new AppError('Headers array is required', 400)
     }
@@ -283,7 +183,6 @@ export const mapIOCColumns = async (
       throw new AppError('Sample data array is required', 400)
     }
 
-    // Import lazily to avoid circular dependencies if any (though unlikely here)
     const { aiAnalysisService } = await import('../services/aiAnalysisService.js')
 
     const mapping = await aiAnalysisService.mapColumns(headers, sampleData)

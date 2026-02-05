@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { lazy, Suspense } from 'react'
 import { useAuthStore } from './store/authStore'
 import Layout from './components/layout/Layout'
+import ToastContainer from './components/common/ToastContainer'
 
 // Lazy load all pages for better performance
 const LoginPage = lazy(() => import('./pages/LoginPage'))
@@ -24,6 +25,7 @@ function App() {
 
   return (
     <Router>
+      <ToastContainer />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public routes */}
