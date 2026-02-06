@@ -21,6 +21,7 @@ import cveRoutes from './routes/cveRoutes.js'
 import analyticsRoutes from './routes/analyticsRoutes.js'
 import complianceRoutes from './routes/complianceRoutes.js'
 import exportRoutes from './routes/exportRoutes.js'
+import shareRoutes from './routes/shareRoutes.js'
 
 // Load environment variables first
 dotenv.config()
@@ -123,6 +124,7 @@ app.use('/api/cve', apiLimiter, cveRoutes)
 app.use('/api/analytics', apiLimiter, analyticsRoutes)
 app.use('/api/compliance', apiLimiter, complianceRoutes)
 app.use('/api/export', apiLimiter, exportRoutes)
+app.use('/api/share', apiLimiter, shareRoutes)
 
 // Error handling
 app.use(errorHandler)

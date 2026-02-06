@@ -13,6 +13,7 @@ const ProjectDetail = lazy(() => import('./pages/ProjectDetail'))
 const ThreatAnalysis = lazy(() => import('./pages/ThreatAnalysis'))
 const ReportViewer = lazy(() => import('./pages/ReportViewer'))
 const ProjectAuditLog = lazy(() => import('./pages/ProjectAuditLog'))
+const SharedReportViewer = lazy(() => import('./pages/SharedReportViewer'))
 
 // Loading component for lazy loaded routes
 const PageLoader = () => (
@@ -46,6 +47,9 @@ function App() {
             <Route path="projects/:id/audit" element={<ProjectAuditLog />} />
             <Route path="projects/:projectId/report" element={<ReportViewer />} />
           </Route>
+
+          {/* Public shared report route */}
+          <Route path="shared/:token" element={<SharedReportViewer />} />
 
           {/* Catch-all */}
           <Route path="*" element={<Navigate to="/dashboard" />} />
