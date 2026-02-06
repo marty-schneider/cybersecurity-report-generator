@@ -250,6 +250,56 @@ export interface RiskPostureEntry {
   INFO?: number
 }
 
+// Compliance types
+export interface ComplianceFramework {
+  id: string
+  name: string
+  version: string
+  shortCode: string
+  _count?: { controls: number }
+  createdAt: string
+}
+
+export interface ComplianceControl {
+  id: string
+  frameworkId: string
+  controlId: string
+  title: string
+  description: string
+  category?: string
+}
+
+export interface FindingComplianceMapping {
+  id: string
+  findingId: string
+  complianceControlId: string
+  complianceControl: ComplianceControl & { framework: ComplianceFramework }
+  isAISuggested: boolean
+  confidence?: number
+  notes?: string
+}
+
+export interface ComplianceSummary {
+  framework: {
+    id: string
+    name: string
+    version: string
+    shortCode: string
+  }
+  totalControls: number
+  mappedControls: number
+  coverage: number
+  mappings: Array<{
+    id: string
+    controlId: string
+    controlTitle: string
+    finding: { id: string; title: string; severity: Severity }
+    isAISuggested: boolean
+    confidence?: number
+    notes?: string
+  }>
+}
+
 // Template types
 export interface Template {
   id: string

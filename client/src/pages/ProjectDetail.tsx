@@ -20,6 +20,8 @@ import AttachmentUploader from '../components/finding/AttachmentUploader'
 import AttachmentGallery from '../components/finding/AttachmentGallery'
 import TemplatePickerModal from '../components/finding/TemplatePickerModal'
 import CVEInfoCard from '../components/finding/CVEInfoCard'
+import ComplianceMappingPanel from '../components/compliance/ComplianceMappingPanel'
+import ComplianceDashboard from '../components/compliance/ComplianceDashboard'
 import { SeverityBadge, StatusBadge } from '../components/badges'
 import { useIOCForm } from '../hooks/useIOCForm'
 import { notify } from '../store/notificationStore'
@@ -40,6 +42,7 @@ export default function ProjectDetail() {
   const [showRemediationDashboard, setShowRemediationDashboard] = useState(false)
   const [findingAttachments, setFindingAttachments] = useState<Record<string, Attachment[]>>({})
   const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState(false)
+  const [showComplianceDashboard, setShowComplianceDashboard] = useState(false)
   const [findingFormData, setFindingFormData] = useState({
     title: '',
     description: '',
@@ -317,6 +320,24 @@ export default function ProjectDetail() {
         </div>
       )}
 
+      {/* Compliance Dashboard */}
+      {!isIncidentResponse && findings.length > 0 && (
+        <div className="card mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">Compliance Mapping</h2>
+            <Button
+              variant="secondary"
+              onClick={() => setShowComplianceDashboard(!showComplianceDashboard)}
+            >
+              {showComplianceDashboard ? 'Hide' : 'Show Coverage'}
+            </Button>
+          </div>
+          {showComplianceDashboard && id && (
+            <ComplianceDashboard projectId={id} />
+          )}
+        </div>
+      )}
+
       {/* Findings Section - Only show for non-IR projects */}
       {!isIncidentResponse && (
         <div className="card">
@@ -402,6 +423,9 @@ export default function ProjectDetail() {
                             }))}
                           />
                         </div>
+                      </div>
+                      <div className="border-t border-gray-200 pt-4">
+                        <ComplianceMappingPanel findingId={finding.id} />
                       </div>
                     </div>
                   )}

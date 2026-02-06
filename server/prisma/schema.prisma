@@ -94,8 +94,9 @@ model Finding {
   verifiedDate            DateTime?
   riskAcceptanceNote      String?   @db.Text
 
-  remediationNotes RemediationNote[]
-  attachments      Attachment[]
+  remediationNotes    RemediationNote[]
+  attachments         Attachment[]
+  complianceMappings  FindingComplianceMapping[]
 
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -291,6 +292,45 @@ model RemediationNote {
 
   @@index([findingId])
   @@map("remediation_notes")
+}
+
+model ComplianceFramework {
+  id        String              @id @default(uuid())
+  name      String
+  version   String
+  shortCode String              @unique
+  controls  ComplianceControl[]
+  createdAt DateTime            @default(now())
+
+  @@map("compliance_frameworks")
+}
+
+model ComplianceControl {
+  id              String              @id @default(uuid())
+  frameworkId     String
+  framework       ComplianceFramework @relation(fields: [frameworkId], references: [id], onDelete: Cascade)
+  controlId       String
+  title           String
+  description     String              @db.Text
+  category        String?
+  findingMappings FindingComplianceMapping[]
+
+  @@unique([frameworkId, controlId])
+  @@map("compliance_controls")
+}
+
+model FindingComplianceMapping {
+  id                  String            @id @default(uuid())
+  findingId           String
+  finding             Finding           @relation(fields: [findingId], references: [id], onDelete: Cascade)
+  complianceControlId String
+  complianceControl   ComplianceControl @relation(fields: [complianceControlId], references: [id], onDelete: Cascade)
+  isAISuggested       Boolean           @default(false)
+  confidence          Float?
+  notes               String?           @db.Text
+
+  @@unique([findingId, complianceControlId])
+  @@map("finding_compliance_mappings")
 }
 
 enum AuditAction {
