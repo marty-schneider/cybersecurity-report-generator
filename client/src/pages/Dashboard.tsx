@@ -1,10 +1,24 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { projectService } from '../services/projectService'
-import { Project } from '../types'
+import { analyticsService } from '../services/analyticsService'
+import {
+  Project,
+  OverviewStats,
+  SeverityDistribution,
+  FindingsOverTimeEntry,
+  IOCTypeBreakdownEntry,
+  MitreHeatmap as MitreHeatmapData,
+  RiskPostureEntry,
+} from '../types'
 import LoadingSkeleton from '../components/LoadingSkeleton'
 import { getProjectStatusClass } from '../constants/badgeColors'
 import ProjectModal from '../components/project/ProjectModal'
+import SeverityDistributionChart from '../components/dashboard/SeverityDistributionChart'
+import FindingsOverTimeChart from '../components/dashboard/FindingsOverTimeChart'
+import IOCTypeBreakdown from '../components/dashboard/IOCTypeBreakdown'
+import MitreHeatmap from '../components/dashboard/MitreHeatmap'
+import RiskPostureChart from '../components/dashboard/RiskPostureChart'
 import { notify } from '../store/notificationStore'
 
 export default function Dashboard() {
@@ -12,33 +26,44 @@ export default function Dashboard() {
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false)
-  const [stats, setStats] = useState({
-    activeProjects: 0,
-    totalFindings: 0,
-    iocsAnalyzed: 0,
-    criticalFindings: 0,
-  })
+
+  const [stats, setStats] = useState<OverviewStats | null>(null)
+  const [severityData, setSeverityData] = useState<SeverityDistribution[]>([])
+  const [findingsOverTime, setFindingsOverTime] = useState<FindingsOverTimeEntry[]>([])
+  const [timeRange, setTimeRange] = useState('30d')
+  const [iocBreakdown, setIocBreakdown] = useState<IOCTypeBreakdownEntry[]>([])
+  const [mitreData, setMitreData] = useState<MitreHeatmapData>({})
+  const [riskPosture, setRiskPosture] = useState<RiskPostureEntry[]>([])
 
   useEffect(() => {
     loadDashboard()
   }, [])
 
+  useEffect(() => {
+    analyticsService.getFindingsOverTime(timeRange)
+      .then(setFindingsOverTime)
+      .catch(() => {})
+  }, [timeRange])
+
   const loadDashboard = async () => {
     try {
       setLoading(true)
-      const projectsData = await projectService.getAll()
+      const [projectsData, overview, severity, findings, iocs, mitre, risk] = await Promise.all([
+        projectService.getAll(),
+        analyticsService.getOverview(),
+        analyticsService.getSeverityDistribution(),
+        analyticsService.getFindingsOverTime(timeRange),
+        analyticsService.getIOCTypeBreakdown(),
+        analyticsService.getMitreHeatmap(),
+        analyticsService.getRiskPosture(),
+      ])
       setProjects(projectsData)
-
-      const activeCount = projectsData.filter((p) => p.status === 'ACTIVE').length
-      const findingsCount = projectsData.reduce((sum, p: any) => sum + (p._count?.findings || 0), 0)
-      const iocsCount = projectsData.reduce((sum, p: any) => sum + (p._count?.iocs || 0), 0)
-
-      setStats({
-        activeProjects: activeCount,
-        totalFindings: findingsCount,
-        iocsAnalyzed: iocsCount,
-        criticalFindings: 0,
-      })
+      setStats(overview)
+      setSeverityData(severity)
+      setFindingsOverTime(findings)
+      setIocBreakdown(iocs)
+      setMitreData(mitre)
+      setRiskPosture(risk)
     } catch {
       notify.error('Failed to load dashboard')
       setProjects([])
@@ -66,23 +91,40 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="card">
           <h3 className="text-sm font-medium text-gray-600 mb-2">Active Projects</h3>
-          <p className="text-3xl font-bold text-gray-900">{stats.activeProjects}</p>
-        </div>
-
-        <div className="card">
-          <h3 className="text-sm font-medium text-gray-600 mb-2">Total Projects</h3>
-          <p className="text-3xl font-bold text-gray-900">{projects.length}</p>
+          <p className="text-3xl font-bold text-gray-900">{stats?.activeProjects ?? 0}</p>
         </div>
 
         <div className="card">
           <h3 className="text-sm font-medium text-gray-600 mb-2">Total Findings</h3>
-          <p className="text-3xl font-bold text-gray-900">{stats.totalFindings}</p>
+          <p className="text-3xl font-bold text-gray-900">{stats?.totalFindings ?? 0}</p>
+        </div>
+
+        <div className="card">
+          <h3 className="text-sm font-medium text-gray-600 mb-2">Critical Findings</h3>
+          <p className="text-3xl font-bold text-red-600">{stats?.criticalFindings ?? 0}</p>
         </div>
 
         <div className="card">
           <h3 className="text-sm font-medium text-gray-600 mb-2">IOCs Analyzed</h3>
-          <p className="text-3xl font-bold text-gray-900">{stats.iocsAnalyzed}</p>
+          <p className="text-3xl font-bold text-gray-900">{stats?.totalIOCs ?? 0}</p>
         </div>
+      </div>
+
+      {/* Analytics Charts - Row 1 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <SeverityDistributionChart data={severityData} />
+        <FindingsOverTimeChart data={findingsOverTime} range={timeRange} onRangeChange={setTimeRange} />
+      </div>
+
+      {/* Analytics Charts - Row 2 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <IOCTypeBreakdown data={iocBreakdown} />
+        <RiskPostureChart data={riskPosture} />
+      </div>
+
+      {/* MITRE Heatmap - Full width */}
+      <div className="mb-8">
+        <MitreHeatmap data={mitreData} />
       </div>
 
       {/* Recent Projects */}

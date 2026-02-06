@@ -202,6 +202,54 @@ export interface FindingTemplate {
   updatedAt: string
 }
 
+// Analytics types
+export interface OverviewStats {
+  totalProjects: number
+  activeProjects: number
+  totalFindings: number
+  totalIOCs: number
+  totalTTPs: number
+  totalReports: number
+  criticalFindings: number
+}
+
+export interface SeverityDistribution {
+  severity: Severity
+  count: number
+}
+
+export interface StatusDistribution {
+  status: FindingStatus
+  count: number
+}
+
+export interface FindingsOverTimeEntry {
+  date: string
+  CRITICAL?: number
+  HIGH?: number
+  MEDIUM?: number
+  LOW?: number
+  INFO?: number
+}
+
+export interface IOCTypeBreakdownEntry {
+  type: IOCType
+  count: number
+}
+
+export type MitreHeatmap = Record<string, Array<{ technique: string; mitreId: string; count: number }>>
+
+export interface RiskPostureEntry {
+  projectId: string
+  projectName: string
+  totalFindings: number
+  CRITICAL?: number
+  HIGH?: number
+  MEDIUM?: number
+  LOW?: number
+  INFO?: number
+}
+
 // Template types
 export interface Template {
   id: string
