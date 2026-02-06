@@ -23,6 +23,7 @@ model User {
   findingTemplates FindingTemplate[] @relation("createdTemplates")
   auditLogs        AuditLog[]
   shareLinks       ShareLink[]
+  notifications    Notification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -384,4 +385,32 @@ model AuditLog {
   @@index([projectId, createdAt])
   @@index([userId, createdAt])
   @@map("audit_logs")
+}
+
+enum NotificationType {
+  FINDING_ASSIGNED
+  FINDING_STATUS_CHANGED
+  REPORT_COMPLETED
+  PROJECT_STATUS_CHANGED
+  PROJECT_MEMBER_ADDED
+  REMEDIATION_DUE
+  SYSTEM
+}
+
+model Notification {
+  id         String           @id @default(uuid())
+  userId     String
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type       NotificationType
+  title      String
+  message    String           @db.Text
+  entityType String?
+  entityId   String?
+  projectId  String?
+  isRead     Boolean          @default(false)
+  readAt     DateTime?
+  createdAt  DateTime         @default(now())
+
+  @@index([userId, isRead, createdAt])
+  @@map("notifications")
 }

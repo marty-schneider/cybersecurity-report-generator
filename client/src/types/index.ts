@@ -300,6 +300,37 @@ export interface ComplianceSummary {
   }>
 }
 
+// Notification types
+export type NotificationType =
+  | 'FINDING_ASSIGNED'
+  | 'FINDING_STATUS_CHANGED'
+  | 'REPORT_COMPLETED'
+  | 'PROJECT_STATUS_CHANGED'
+  | 'PROJECT_MEMBER_ADDED'
+  | 'REMEDIATION_DUE'
+  | 'SYSTEM'
+
+export interface AppNotification {
+  id: string
+  userId: string
+  type: NotificationType
+  title: string
+  message: string
+  entityType?: string
+  entityId?: string
+  projectId?: string
+  isRead: boolean
+  readAt?: string
+  createdAt: string
+}
+
+export interface PaginatedNotificationResponse {
+  notifications: AppNotification[]
+  total: number
+  page: number
+  totalPages: number
+}
+
 // Template types
 export interface Template {
   id: string

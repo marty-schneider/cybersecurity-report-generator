@@ -5,6 +5,7 @@ import { AppError } from '../middleware/errorHandler.js'
 import { verifyResourceAccess } from '../middleware/projectAccess.js'
 import { verifyProjectAccess, ProjectRequest } from '../middleware/projectAccess.js'
 import { auditService } from '../services/auditService.js'
+import { notificationService } from '../services/notificationService.js'
 import { FindingStatus } from '@prisma/client'
 
 const VALID_TRANSITIONS: Record<string, FindingStatus[]> = {
@@ -84,6 +85,16 @@ export const updateRemediationStatus = async (
       details: { remediation: updateData },
       req,
     })
+
+    if (status) {
+      notificationService.notifyProjectMembers(finding.projectId, userId, {
+        type: 'FINDING_STATUS_CHANGED',
+        title: 'Finding Status Updated',
+        message: `"${finding.title}" status changed to ${status.replace(/_/g, ' ')}.`,
+        entityType: 'Finding',
+        entityId: findingId,
+      })
+    }
 
     res.json(updated)
   } catch (error) {

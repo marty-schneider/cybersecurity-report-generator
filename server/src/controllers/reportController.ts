@@ -5,6 +5,7 @@ import { prisma } from '../utils/db.js'
 import { verifyProjectAccess, ProjectRequest } from '../middleware/projectAccess.js'
 import { AuthRequest } from '../middleware/auth.js'
 import { auditService } from '../services/auditService.js'
+import { notificationService } from '../services/notificationService.js'
 
 export class ReportController {
   /**
@@ -32,6 +33,14 @@ export class ReportController {
       })
 
       auditService.log({ userId, projectId, action: 'EXPORT', entityType: 'Report', entityId: report.id, req })
+
+      notificationService.notifyProjectMembers(projectId, userId, {
+        type: 'REPORT_COMPLETED',
+        title: 'Report Generated',
+        message: `A new report has been generated for the project.`,
+        entityType: 'Report',
+        entityId: report.id,
+      })
 
       res.json({
         success: true,
