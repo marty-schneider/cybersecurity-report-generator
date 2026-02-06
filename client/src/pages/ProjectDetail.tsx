@@ -22,6 +22,7 @@ import TemplatePickerModal from '../components/finding/TemplatePickerModal'
 import CVEInfoCard from '../components/finding/CVEInfoCard'
 import ComplianceMappingPanel from '../components/compliance/ComplianceMappingPanel'
 import ComplianceDashboard from '../components/compliance/ComplianceDashboard'
+import ExportMenu from '../components/report/ExportMenu'
 import { SeverityBadge, StatusBadge } from '../components/badges'
 import { useIOCForm } from '../hooks/useIOCForm'
 import { notify } from '../store/notificationStore'
@@ -225,6 +226,7 @@ export default function ProjectDetail() {
               <Button variant="secondary">📋 Audit Log</Button>
             </Link>
             <Button onClick={() => setIsReportModalOpen(true)} variant="primary">📄 Generate Report</Button>
+            {id && <ExportMenu projectId={id} />}
           </div>
         </div>
 

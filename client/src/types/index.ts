@@ -149,7 +149,7 @@ export interface TTPMapping {
 }
 
 // Report types
-export type ExportFormat = 'PDF' | 'DOCX'
+export type ExportFormat = 'PDF' | 'DOCX' | 'CSV' | 'JSON' | 'HTML'
 
 export interface Report {
   id: string

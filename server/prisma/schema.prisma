@@ -218,6 +218,9 @@ enum FindingStatus {
 enum ExportFormat {
   PDF
   DOCX
+  CSV
+  JSON
+  HTML
 }
 
 enum MemberRole {
