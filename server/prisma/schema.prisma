@@ -16,9 +16,10 @@ model User {
   name      String
   role      Role     @default(USER)
 
-  projects  Project[]
-  findings  Finding[]
-  auditLogs AuditLog[]
+  projects         Project[]
+  findings         Finding[]
+  remediationNotes RemediationNote[] @relation("remediationNotes")
+  auditLogs        AuditLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -80,6 +81,14 @@ model Finding {
 
   assignedTo      String?
   assignee        User?         @relation(fields: [assignedTo], references: [id])
+
+  remediationAssignedDate DateTime?
+  remediationTargetDate   DateTime?
+  retestDate              DateTime?
+  verifiedDate            DateTime?
+  riskAcceptanceNote      String?   @db.Text
+
+  remediationNotes RemediationNote[]
 
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -191,6 +200,10 @@ enum FindingStatus {
   NEW
   IN_REVIEW
   VERIFIED
+  REMEDIATION_PLANNED
+  RETEST_PENDING
+  REMEDIATED
+  ACCEPTED_RISK
   MITIGATED
 }
 
@@ -220,6 +233,19 @@ enum IOCType {
   CERTIFICATE
   FILE_PATH
   COMMAND_LINE
+}
+
+model RemediationNote {
+  id        String   @id @default(uuid())
+  findingId String
+  finding   Finding  @relation(fields: [findingId], references: [id], onDelete: Cascade)
+  note      String   @db.Text
+  createdBy String
+  author    User     @relation("remediationNotes", fields: [createdBy], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([findingId])
+  @@map("remediation_notes")
 }
 
 enum AuditAction {

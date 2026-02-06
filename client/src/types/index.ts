@@ -34,7 +34,7 @@ export interface Project {
 
 // Finding types
 export type Severity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'INFO'
-export type FindingStatus = 'NEW' | 'IN_REVIEW' | 'VERIFIED' | 'MITIGATED'
+export type FindingStatus = 'NEW' | 'IN_REVIEW' | 'VERIFIED' | 'REMEDIATION_PLANNED' | 'RETEST_PENDING' | 'REMEDIATED' | 'ACCEPTED_RISK' | 'MITIGATED'
 
 export interface Finding {
   id: string
@@ -48,8 +48,31 @@ export interface Finding {
   remediation: string
   status: FindingStatus
   assignedTo?: string
+  remediationAssignedDate?: string
+  remediationTargetDate?: string
+  retestDate?: string
+  verifiedDate?: string
+  riskAcceptanceNote?: string
+  remediationNotes?: RemediationNote[]
   createdAt: string
   updatedAt: string
+}
+
+export interface RemediationNote {
+  id: string
+  findingId: string
+  note: string
+  createdBy: string
+  author: { id: string; name: string; email: string }
+  createdAt: string
+}
+
+export interface RemediationDashboardData {
+  statusCounts: Record<string, number>
+  totalFindings: number
+  overdue: Array<{ id: string; title: string; severity: Severity; status: FindingStatus; remediationTargetDate?: string }>
+  upcomingRetests: Array<{ id: string; title: string; severity: Severity; status: FindingStatus; retestDate?: string }>
+  findings: Array<{ id: string; title: string; severity: Severity; status: FindingStatus; remediationTargetDate?: string; retestDate?: string }>
 }
 
 // IOC types

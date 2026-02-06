@@ -18,6 +18,10 @@ export const getStatusBadgeClass = (status: string): string => {
     NEW: 'bg-blue-100 text-blue-700',
     IN_REVIEW: 'bg-yellow-100 text-yellow-700',
     VERIFIED: 'bg-purple-100 text-purple-700',
+    REMEDIATION_PLANNED: 'bg-indigo-100 text-indigo-700',
+    RETEST_PENDING: 'bg-orange-100 text-orange-700',
+    REMEDIATED: 'bg-teal-100 text-teal-700',
+    ACCEPTED_RISK: 'bg-amber-100 text-amber-700',
     MITIGATED: 'bg-green-100 text-green-700',
   }
   return colors[status] || 'bg-gray-100 text-gray-700'

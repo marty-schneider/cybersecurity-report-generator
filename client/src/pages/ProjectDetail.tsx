@@ -13,6 +13,8 @@ import IOCImportModal from '../components/ioc/IOCImportModal'
 import IOCFormModal from '../components/ioc/IOCFormModal'
 import IOCList from '../components/ioc/IOCList'
 import ReportPreviewModal from '../components/report/ReportPreviewModal'
+import RemediationPanel from '../components/finding/RemediationPanel'
+import RemediationDashboard from '../components/finding/RemediationDashboard'
 import { SeverityBadge, StatusBadge } from '../components/badges'
 import { useIOCForm } from '../hooks/useIOCForm'
 import { notify } from '../store/notificationStore'
@@ -29,6 +31,8 @@ export default function ProjectDetail() {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
   const [editingFinding, setEditingFinding] = useState<Finding | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [expandedFindingId, setExpandedFindingId] = useState<string | null>(null)
+  const [showRemediationDashboard, setShowRemediationDashboard] = useState(false)
   const [findingFormData, setFindingFormData] = useState({
     title: '',
     description: '',
@@ -274,6 +278,24 @@ export default function ProjectDetail() {
         </div>
       )}
 
+      {/* Remediation Dashboard - Only show for non-IR projects */}
+      {!isIncidentResponse && findings.length > 0 && (
+        <div className="card mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">Remediation Tracking</h2>
+            <Button
+              variant="secondary"
+              onClick={() => setShowRemediationDashboard(!showRemediationDashboard)}
+            >
+              {showRemediationDashboard ? 'Hide Dashboard' : 'Show Dashboard'}
+            </Button>
+          </div>
+          {showRemediationDashboard && id && (
+            <RemediationDashboard projectId={id} />
+          )}
+        </div>
+      )}
+
       {/* Findings Section - Only show for non-IR projects */}
       {!isIncidentResponse && (
         <div className="card">
@@ -298,6 +320,13 @@ export default function ProjectDetail() {
                         <span className="text-sm text-gray-600">CVSS: {finding.cvssScore}</span>
                       )}
                       <StatusBadge status={finding.status} />
+                      <button
+                        onClick={() => setExpandedFindingId(expandedFindingId === finding.id ? null : finding.id)}
+                        className="text-indigo-600 hover:text-indigo-800 text-xs px-2 py-1"
+                        title="Remediation"
+                      >
+                        {expandedFindingId === finding.id ? '▼ Remediation' : '▶ Remediation'}
+                      </button>
                       <button onClick={() => handleEditFinding(finding)} className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1" title="Edit Finding">✏️</button>
                       <button onClick={() => handleDeleteFinding(finding)} className="text-red-600 hover:text-red-800 text-xs px-2 py-1" title="Delete Finding">🗑️</button>
                     </div>
@@ -308,6 +337,14 @@ export default function ProjectDetail() {
                       {finding.affectedSystems.map((system, idx) => (
                         <span key={idx} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">{system}</span>
                       ))}
+                    </div>
+                  )}
+                  {expandedFindingId === finding.id && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <RemediationPanel
+                        finding={finding}
+                        onUpdate={(updated) => setFindings(findings.map(f => f.id === updated.id ? updated : f))}
+                      />
                     </div>
                   )}
                 </div>
