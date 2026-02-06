@@ -3,6 +3,7 @@ import { AuthRequest } from '../middleware/auth.js'
 import { prisma } from '../utils/db.js'
 import { AppError } from '../middleware/errorHandler.js'
 import { Prisma } from '@prisma/client'
+import { auditService } from '../services/auditService.js'
 
 export const getAllProjects = async (
   req: AuthRequest,

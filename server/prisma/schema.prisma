@@ -18,6 +18,7 @@ model User {
 
   projects  Project[]
   findings  Finding[]
+  auditLogs AuditLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -42,6 +43,7 @@ model Project {
   iocs           IOC[]
   ttpMappings    TTPMapping[]
   reports        Report[]
+  auditLogs      AuditLog[]
 
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
@@ -218,4 +220,33 @@ enum IOCType {
   CERTIFICATE
   FILE_PATH
   COMMAND_LINE
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  VIEW
+  EXPORT
+  SHARE
+  LOGIN
+}
+
+model AuditLog {
+  id          String      @id @default(uuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  projectId   String?
+  project     Project?    @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  action      AuditAction
+  entityType  String
+  entityId    String?
+  details     Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime    @default(now())
+
+  @@index([projectId, createdAt])
+  @@index([userId, createdAt])
+  @@map("audit_logs")
 }

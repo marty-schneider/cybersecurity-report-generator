@@ -7,6 +7,7 @@ import { mitreAttackService } from '../services/mitreAttackService.js'
 import { logger } from '../utils/logger.js'
 import { verifyProjectAccess, verifyResourceAccess, ProjectRequest } from '../middleware/projectAccess.js'
 import { IOC } from '@prisma/client'
+import { auditService } from '../services/auditService.js'
 
 export const getTTPs = async (
   req: ProjectRequest,

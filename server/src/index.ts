@@ -13,6 +13,7 @@ import findingRoutes from './routes/findingRoutes.js'
 import iocRoutes from './routes/iocRoutes.js'
 import ttpRoutes from './routes/ttpRoutes.js'
 import reportRoutes from './routes/reportRoutes.js'
+import auditRoutes from './routes/auditRoutes.js'
 
 // Load environment variables first
 dotenv.config()
@@ -107,6 +108,7 @@ app.use('/api/findings', apiLimiter, findingRoutes)
 app.use('/api/iocs', apiLimiter, iocRoutes)
 app.use('/api/ttps', aiLimiter, ttpRoutes)
 app.use('/api/reports', aiLimiter, reportRoutes)
+app.use('/api/audit', apiLimiter, auditRoutes)
 
 // Error handling
 app.use(errorHandler)

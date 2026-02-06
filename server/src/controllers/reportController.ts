@@ -4,6 +4,7 @@ import { logger } from '../utils/logger.js'
 import { prisma } from '../utils/db.js'
 import { verifyProjectAccess, ProjectRequest } from '../middleware/projectAccess.js'
 import { AuthRequest } from '../middleware/auth.js'
+import { auditService } from '../services/auditService.js'
 
 export class ReportController {
   /**

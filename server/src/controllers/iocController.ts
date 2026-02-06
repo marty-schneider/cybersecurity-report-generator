@@ -4,6 +4,7 @@ import { prisma } from '../utils/db.js'
 import { AppError } from '../middleware/errorHandler.js'
 import { verifyProjectAccess, verifyResourceAccess, ProjectRequest } from '../middleware/projectAccess.js'
 import { Prisma, IOCType } from '@prisma/client'
+import { auditService } from '../services/auditService.js'
 
 export const getIOCs = async (
   req: ProjectRequest,
