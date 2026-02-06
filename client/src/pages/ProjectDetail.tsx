@@ -3,9 +3,10 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { projectService } from '../services/projectService'
 import { findingService } from '../services/findingService'
 import { iocService } from '../services/iocService'
+import { attachmentService } from '../services/attachmentService'
 import { ttpService } from '../services/ttpService'
 import { useProjectStore } from '../store/projectStore'
-import { Project, Finding, Severity, IOC } from '../types'
+import { Project, Finding, Severity, IOC, Attachment } from '../types'
 import Button from '../components/common/Button'
 import Modal from '../components/common/Modal'
 import LoadingSkeleton from '../components/LoadingSkeleton'
@@ -15,6 +16,8 @@ import IOCList from '../components/ioc/IOCList'
 import ReportPreviewModal from '../components/report/ReportPreviewModal'
 import RemediationPanel from '../components/finding/RemediationPanel'
 import RemediationDashboard from '../components/finding/RemediationDashboard'
+import AttachmentUploader from '../components/finding/AttachmentUploader'
+import AttachmentGallery from '../components/finding/AttachmentGallery'
 import { SeverityBadge, StatusBadge } from '../components/badges'
 import { useIOCForm } from '../hooks/useIOCForm'
 import { notify } from '../store/notificationStore'
@@ -33,6 +36,7 @@ export default function ProjectDetail() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [expandedFindingId, setExpandedFindingId] = useState<string | null>(null)
   const [showRemediationDashboard, setShowRemediationDashboard] = useState(false)
+  const [findingAttachments, setFindingAttachments] = useState<Record<string, Attachment[]>>({})
   const [findingFormData, setFindingFormData] = useState({
     title: '',
     description: '',
@@ -321,11 +325,19 @@ export default function ProjectDetail() {
                       )}
                       <StatusBadge status={finding.status} />
                       <button
-                        onClick={() => setExpandedFindingId(expandedFindingId === finding.id ? null : finding.id)}
+                        onClick={() => {
+                          const newId = expandedFindingId === finding.id ? null : finding.id
+                          setExpandedFindingId(newId)
+                          if (newId && !findingAttachments[finding.id]) {
+                            attachmentService.list(finding.id).then(atts => {
+                              setFindingAttachments(prev => ({ ...prev, [finding.id]: atts }))
+                            }).catch(() => {})
+                          }
+                        }}
                         className="text-indigo-600 hover:text-indigo-800 text-xs px-2 py-1"
-                        title="Remediation"
+                        title="Remediation & Evidence"
                       >
-                        {expandedFindingId === finding.id ? '▼ Remediation' : '▶ Remediation'}
+                        {expandedFindingId === finding.id ? '▼ Details' : '▶ Details'}
                       </button>
                       <button onClick={() => handleEditFinding(finding)} className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1" title="Edit Finding">✏️</button>
                       <button onClick={() => handleDeleteFinding(finding)} className="text-red-600 hover:text-red-800 text-xs px-2 py-1" title="Delete Finding">🗑️</button>
@@ -340,11 +352,31 @@ export default function ProjectDetail() {
                     </div>
                   )}
                   {expandedFindingId === finding.id && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="mt-4 pt-4 border-t border-gray-200 space-y-6">
                       <RemediationPanel
                         finding={finding}
                         onUpdate={(updated) => setFindings(findings.map(f => f.id === updated.id ? updated : f))}
                       />
+                      <div className="border-t border-gray-200 pt-4">
+                        <h4 className="text-sm font-medium text-gray-700 mb-3">Evidence & Attachments</h4>
+                        <AttachmentUploader
+                          findingId={finding.id}
+                          onUpload={(att) => setFindingAttachments(prev => ({
+                            ...prev,
+                            [finding.id]: [att, ...(prev[finding.id] || [])],
+                          }))}
+                        />
+                        <div className="mt-3">
+                          <AttachmentGallery
+                            findingId={finding.id}
+                            attachments={findingAttachments[finding.id] || []}
+                            onDelete={(attId) => setFindingAttachments(prev => ({
+                              ...prev,
+                              [finding.id]: (prev[finding.id] || []).filter(a => a.id !== attId),
+                            }))}
+                          />
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>

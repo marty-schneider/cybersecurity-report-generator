@@ -75,6 +75,20 @@ export interface RemediationDashboardData {
   findings: Array<{ id: string; title: string; severity: Severity; status: FindingStatus; remediationTargetDate?: string; retestDate?: string }>
 }
 
+// Attachment types
+export interface Attachment {
+  id: string
+  findingId: string
+  fileName: string
+  fileType: string
+  fileSize: number
+  storagePath: string
+  caption?: string
+  uploadedBy: string
+  uploader?: { id: string; name: string; email: string }
+  createdAt: string
+}
+
 // IOC types
 export type IOCType =
   | 'IP_ADDRESS'

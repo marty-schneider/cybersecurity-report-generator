@@ -19,6 +19,7 @@ model User {
   projects         Project[]
   findings         Finding[]
   remediationNotes RemediationNote[] @relation("remediationNotes")
+  attachments      Attachment[]     @relation("attachments")
   auditLogs        AuditLog[]
 
   createdAt DateTime @default(now())
@@ -89,6 +90,7 @@ model Finding {
   riskAcceptanceNote      String?   @db.Text
 
   remediationNotes RemediationNote[]
+  attachments      Attachment[]
 
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -233,6 +235,23 @@ enum IOCType {
   CERTIFICATE
   FILE_PATH
   COMMAND_LINE
+}
+
+model Attachment {
+  id          String   @id @default(uuid())
+  findingId   String
+  finding     Finding  @relation(fields: [findingId], references: [id], onDelete: Cascade)
+  fileName    String
+  fileType    String
+  fileSize    Int
+  storagePath String
+  caption     String?  @db.Text
+  uploadedBy  String
+  uploader    User     @relation("attachments", fields: [uploadedBy], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([findingId])
+  @@map("attachments")
 }
 
 model RemediationNote {
