@@ -53,9 +53,23 @@ export interface Finding {
   retestDate?: string
   verifiedDate?: string
   riskAcceptanceNote?: string
+  cveId?: string
+  cveData?: CVEData
+  cveEnrichedAt?: string
   remediationNotes?: RemediationNote[]
   createdAt: string
   updatedAt: string
+}
+
+export interface CVEData {
+  cveId: string
+  description: string
+  cvssScore?: number
+  cvssSeverity?: string
+  cvssVector?: string
+  references: Array<{ url: string; source: string }>
+  published: string
+  lastModified: string
 }
 
 export interface RemediationNote {

@@ -17,6 +17,7 @@ import auditRoutes from './routes/auditRoutes.js'
 import remediationRoutes from './routes/remediationRoutes.js'
 import attachmentRoutes from './routes/attachmentRoutes.js'
 import findingTemplateRoutes from './routes/findingTemplateRoutes.js'
+import cveRoutes from './routes/cveRoutes.js'
 
 // Load environment variables first
 dotenv.config()
@@ -115,6 +116,7 @@ app.use('/api/audit', apiLimiter, auditRoutes)
 app.use('/api/remediation', apiLimiter, remediationRoutes)
 app.use('/api/attachments', apiLimiter, attachmentRoutes)
 app.use('/api/finding-templates', apiLimiter, findingTemplateRoutes)
+app.use('/api/cve', apiLimiter, cveRoutes)
 
 // Error handling
 app.use(errorHandler)

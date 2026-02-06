@@ -19,6 +19,7 @@ import RemediationDashboard from '../components/finding/RemediationDashboard'
 import AttachmentUploader from '../components/finding/AttachmentUploader'
 import AttachmentGallery from '../components/finding/AttachmentGallery'
 import TemplatePickerModal from '../components/finding/TemplatePickerModal'
+import CVEInfoCard from '../components/finding/CVEInfoCard'
 import { SeverityBadge, StatusBadge } from '../components/badges'
 import { useIOCForm } from '../hooks/useIOCForm'
 import { notify } from '../store/notificationStore'
@@ -376,6 +377,12 @@ export default function ProjectDetail() {
                         finding={finding}
                         onUpdate={(updated) => setFindings(findings.map(f => f.id === updated.id ? updated : f))}
                       />
+                      {finding.cveData && (
+                        <div className="border-t border-gray-200 pt-4">
+                          <h4 className="text-sm font-medium text-gray-700 mb-3">CVE Information</h4>
+                          <CVEInfoCard cveData={finding.cveData} />
+                        </div>
+                      )}
                       <div className="border-t border-gray-200 pt-4">
                         <h4 className="text-sm font-medium text-gray-700 mb-3">Evidence & Attachments</h4>
                         <AttachmentUploader

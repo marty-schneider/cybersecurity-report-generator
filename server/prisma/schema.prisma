@@ -81,6 +81,10 @@ model Finding {
   remediation     String        @db.Text
   status          FindingStatus @default(NEW)
 
+  cveId           String?
+  cveData         Json?
+  cveEnrichedAt   DateTime?
+
   assignedTo      String?
   assignee        User?         @relation(fields: [assignedTo], references: [id])
 
