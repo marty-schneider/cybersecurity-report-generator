@@ -133,7 +133,7 @@ export const updateFinding = async (
 
     await verifyResourceAccess(userId, id, prisma.finding, 'write')
 
-    const updateData: Prisma.FindingUpdateInput = {}
+    const updateData: Prisma.FindingUncheckedUpdateInput = {}
     if (title) updateData.title = title
     if (description) updateData.description = description
     if (severity) updateData.severity = severity

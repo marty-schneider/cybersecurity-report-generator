@@ -3,7 +3,7 @@ import { AuthRequest } from '../middleware/auth.js'
 import { prisma } from '../utils/db.js'
 import { AppError } from '../middleware/errorHandler.js'
 import { verifyProjectAccess, verifyResourceAccess, ProjectRequest } from '../middleware/projectAccess.js'
-import { Prisma } from '@prisma/client'
+import { Prisma, IOCType } from '@prisma/client'
 
 export const getIOCs = async (
   req: ProjectRequest,
@@ -100,7 +100,7 @@ export const bulkCreateIOCs = async (
     const createdIOCs = await prisma.iOC.createMany({
       data: iocs.map((ioc: { type: string; value: string; timestamp: string; context?: string; source?: string }) => ({
         projectId,
-        type: ioc.type,
+        type: ioc.type as IOCType,
         value: ioc.value,
         timestamp: new Date(ioc.timestamp),
         context: ioc.context,
