@@ -6,7 +6,7 @@ import { iocService } from '../services/iocService'
 import { attachmentService } from '../services/attachmentService'
 import { ttpService } from '../services/ttpService'
 import { useProjectStore } from '../store/projectStore'
-import { Project, Finding, Severity, IOC, Attachment } from '../types'
+import { Project, Finding, FindingTemplate, Severity, IOC, Attachment } from '../types'
 import Button from '../components/common/Button'
 import Modal from '../components/common/Modal'
 import LoadingSkeleton from '../components/LoadingSkeleton'
@@ -18,6 +18,7 @@ import RemediationPanel from '../components/finding/RemediationPanel'
 import RemediationDashboard from '../components/finding/RemediationDashboard'
 import AttachmentUploader from '../components/finding/AttachmentUploader'
 import AttachmentGallery from '../components/finding/AttachmentGallery'
+import TemplatePickerModal from '../components/finding/TemplatePickerModal'
 import { SeverityBadge, StatusBadge } from '../components/badges'
 import { useIOCForm } from '../hooks/useIOCForm'
 import { notify } from '../store/notificationStore'
@@ -37,6 +38,7 @@ export default function ProjectDetail() {
   const [expandedFindingId, setExpandedFindingId] = useState<string | null>(null)
   const [showRemediationDashboard, setShowRemediationDashboard] = useState(false)
   const [findingAttachments, setFindingAttachments] = useState<Record<string, Attachment[]>>({})
+  const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState(false)
   const [findingFormData, setFindingFormData] = useState({
     title: '',
     description: '',
@@ -147,6 +149,20 @@ export default function ProjectDetail() {
       title: '', description: '', severity: 'MEDIUM',
       cvssScore: '', affectedSystems: '', evidence: '', remediation: '',
     })
+  }
+
+  const handleSelectTemplate = (template: FindingTemplate) => {
+    setEditingFinding(null)
+    setFindingFormData({
+      title: template.title,
+      description: template.description,
+      severity: template.severity,
+      cvssScore: template.cvssScore?.toString() || '',
+      affectedSystems: '',
+      evidence: '',
+      remediation: template.remediation,
+    })
+    setIsFindingModalOpen(true)
   }
 
   const handleAnalyzeIOCs = async () => {
@@ -305,7 +321,10 @@ export default function ProjectDetail() {
         <div className="card">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-900">Findings</h2>
-            <Button onClick={handleAddNewFinding}>+ Add Finding</Button>
+            <div className="flex gap-2">
+              <Button onClick={() => setIsTemplatePickerOpen(true)} variant="secondary">Use Template</Button>
+              <Button onClick={handleAddNewFinding}>+ Add Finding</Button>
+            </div>
           </div>
 
           {findings.length === 0 ? (
@@ -500,6 +519,12 @@ export default function ProjectDetail() {
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
         project={currentProject}
+      />
+
+      <TemplatePickerModal
+        isOpen={isTemplatePickerOpen}
+        onClose={() => setIsTemplatePickerOpen(false)}
+        onSelect={handleSelectTemplate}
       />
     </div>
   )

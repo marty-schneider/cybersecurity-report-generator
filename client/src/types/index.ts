@@ -171,6 +171,23 @@ export interface PaginatedAuditResponse {
   totalPages: number
 }
 
+// Finding Template types
+export interface FindingTemplate {
+  id: string
+  title: string
+  description: string
+  severity: Severity
+  cvssScore?: number
+  category: string
+  remediation: string
+  references: string[]
+  tags: string[]
+  isBuiltIn: boolean
+  createdBy?: string
+  createdAt: string
+  updatedAt: string
+}
+
 // Template types
 export interface Template {
   id: string

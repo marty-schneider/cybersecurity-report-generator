@@ -20,6 +20,7 @@ model User {
   findings         Finding[]
   remediationNotes RemediationNote[] @relation("remediationNotes")
   attachments      Attachment[]     @relation("attachments")
+  findingTemplates FindingTemplate[] @relation("createdTemplates")
   auditLogs        AuditLog[]
 
   createdAt DateTime @default(now())
@@ -235,6 +236,27 @@ enum IOCType {
   CERTIFICATE
   FILE_PATH
   COMMAND_LINE
+}
+
+model FindingTemplate {
+  id          String    @id @default(uuid())
+  title       String
+  description String    @db.Text
+  severity    Severity
+  cvssScore   Float?
+  category    String
+  remediation String    @db.Text
+  references  String[]
+  tags        String[]
+  isBuiltIn   Boolean   @default(false)
+  createdBy   String?
+  creator     User?     @relation("createdTemplates", fields: [createdBy], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([category])
+  @@index([severity])
+  @@map("finding_templates")
 }
 
 model Attachment {
