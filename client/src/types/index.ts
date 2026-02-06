@@ -110,6 +110,30 @@ export interface Report {
   createdAt: string
 }
 
+// Audit Log types
+export type AuditAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'VIEW' | 'EXPORT' | 'SHARE' | 'LOGIN'
+
+export interface AuditLog {
+  id: string
+  userId: string
+  user?: { id: string; name: string; email: string }
+  projectId?: string
+  action: AuditAction
+  entityType: string
+  entityId?: string
+  details?: Record<string, unknown>
+  ipAddress?: string
+  userAgent?: string
+  createdAt: string
+}
+
+export interface PaginatedAuditResponse {
+  logs: AuditLog[]
+  total: number
+  page: number
+  totalPages: number
+}
+
 // Template types
 export interface Template {
   id: string

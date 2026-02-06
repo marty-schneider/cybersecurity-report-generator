@@ -98,6 +98,8 @@ export const analyzeTTPs = async (
 
     logger.info(`Created ${validMappings.length} TTP mappings for project ${projectId}`)
 
+    auditService.log({ userId: req.user!.id, projectId, action: 'CREATE', entityType: 'TTPMapping', details: { iocsAnalyzed: iocs.length, ttpsIdentified: validMappings.length }, req })
+
     res.json({
       success: true,
       analysis: {
@@ -163,7 +165,9 @@ export const deleteTTPMapping = async (
 
     await verifyResourceAccess(userId, id, prisma.tTPMapping, 'write')
 
-    await prisma.tTPMapping.delete({ where: { id } })
+    const deleted = await prisma.tTPMapping.delete({ where: { id } })
+
+    auditService.log({ userId, projectId: deleted.projectId, action: 'DELETE', entityType: 'TTPMapping', entityId: id, req })
 
     res.json({ message: 'TTP mapping deleted successfully' })
   } catch (error) {

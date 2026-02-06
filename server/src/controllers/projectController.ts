@@ -149,6 +149,8 @@ export const createProject = async (
       },
     })
 
+    auditService.log({ userId, projectId: project.id, action: 'CREATE', entityType: 'Project', entityId: project.id, req })
+
     res.status(201).json(project)
   } catch (error) {
     next(error)
@@ -202,6 +204,8 @@ export const updateProject = async (
       },
     })
 
+    auditService.log({ userId, projectId: id, action: 'UPDATE', entityType: 'Project', entityId: id, details: updateData as Record<string, unknown>, req })
+
     res.json(project)
   } catch (error) {
     next(error)
@@ -233,6 +237,8 @@ export const deleteProject = async (
     }
 
     await prisma.project.delete({ where: { id } })
+
+    auditService.log({ userId, projectId: id, action: 'DELETE', entityType: 'Project', entityId: id, req })
 
     res.json({ message: 'Project deleted successfully' })
   } catch (error) {

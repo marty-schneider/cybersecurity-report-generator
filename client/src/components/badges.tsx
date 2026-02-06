@@ -1,4 +1,4 @@
-import { Severity, IOCType, AssessmentType } from '../types'
+import { Severity, IOCType, AssessmentType, AuditAction } from '../types'
 import {
   getSeverityBadgeClass,
   getStatusBadgeClass,
@@ -52,6 +52,24 @@ const ASSESSMENT_TYPE_LABELS: Record<string, string> = {
   SECURITY_AUDIT: 'Security Audit',
   RED_TEAM: 'Red Team',
   INCIDENT_RESPONSE: 'Incident Response',
+}
+
+const AUDIT_ACTION_COLORS: Record<AuditAction, string> = {
+  CREATE: 'bg-green-100 text-green-700',
+  UPDATE: 'bg-blue-100 text-blue-700',
+  DELETE: 'bg-red-100 text-red-700',
+  VIEW: 'bg-gray-100 text-gray-700',
+  EXPORT: 'bg-purple-100 text-purple-700',
+  SHARE: 'bg-indigo-100 text-indigo-700',
+  LOGIN: 'bg-yellow-100 text-yellow-700',
+}
+
+export function AuditActionBadge({ action }: { action: AuditAction }) {
+  return (
+    <span className={`px-2 py-1 rounded text-xs font-medium ${AUDIT_ACTION_COLORS[action] || 'bg-gray-100 text-gray-700'}`}>
+      {action}
+    </span>
+  )
 }
 
 export function AssessmentTypeBadge({ type }: { type: AssessmentType }) {

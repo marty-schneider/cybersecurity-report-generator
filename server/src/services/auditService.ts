@@ -1,5 +1,5 @@
 import { prisma } from '../utils/db.js'
-import { AuditAction } from '@prisma/client'
+import { AuditAction, Prisma } from '@prisma/client'
 import { logger } from '../utils/logger.js'
 
 interface AuditLogParams {
@@ -23,7 +23,7 @@ export const auditService = {
           action: params.action,
           entityType: params.entityType,
           entityId: params.entityId ?? undefined,
-          details: params.details ?? undefined,
+          details: (params.details as Prisma.InputJsonValue) ?? undefined,
           ipAddress: params.req?.ip ?? undefined,
           userAgent: (params.req?.headers?.['user-agent'] as string) ?? undefined,
         },

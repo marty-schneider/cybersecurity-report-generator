@@ -12,6 +12,7 @@ const ProjectList = lazy(() => import('./pages/ProjectList'))
 const ProjectDetail = lazy(() => import('./pages/ProjectDetail'))
 const ThreatAnalysis = lazy(() => import('./pages/ThreatAnalysis'))
 const ReportViewer = lazy(() => import('./pages/ReportViewer'))
+const ProjectAuditLog = lazy(() => import('./pages/ProjectAuditLog'))
 
 // Loading component for lazy loaded routes
 const PageLoader = () => (
@@ -42,6 +43,7 @@ function App() {
             <Route path="projects" element={<ProjectList />} />
             <Route path="projects/:id" element={<ProjectDetail />} />
             <Route path="projects/:id/threat-analysis" element={<ThreatAnalysis />} />
+            <Route path="projects/:id/audit" element={<ProjectAuditLog />} />
             <Route path="projects/:projectId/report" element={<ReportViewer />} />
           </Route>
 

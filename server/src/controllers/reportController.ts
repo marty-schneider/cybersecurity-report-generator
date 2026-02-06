@@ -31,6 +31,8 @@ export class ReportController {
         },
       })
 
+      auditService.log({ userId, projectId, action: 'EXPORT', entityType: 'Report', entityId: report.id, req })
+
       res.json({
         success: true,
         reportId: report.id,

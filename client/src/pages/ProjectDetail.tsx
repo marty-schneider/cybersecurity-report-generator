@@ -193,8 +193,10 @@ export default function ProjectDetail() {
             <Link to={`/projects/${id}/threat-analysis`}>
               <Button>🔍 Threat Analysis</Button>
             </Link>
+            <Link to={`/projects/${id}/audit`}>
+              <Button variant="secondary">📋 Audit Log</Button>
+            </Link>
             <Button onClick={() => setIsReportModalOpen(true)} variant="primary">📄 Generate Report</Button>
-            <Button variant="secondary">⚙️ Settings</Button>
           </div>
         </div>
 

@@ -71,6 +71,8 @@ export const createIOC = async (
       },
     })
 
+    auditService.log({ userId: req.user!.id, projectId, action: 'CREATE', entityType: 'IOC', entityId: ioc.id, req })
+
     res.status(201).json(ioc)
   } catch (error) {
     next(error)
@@ -109,6 +111,8 @@ export const bulkCreateIOCs = async (
       })),
     })
 
+    auditService.log({ userId: req.user!.id, projectId, action: 'CREATE', entityType: 'IOC', details: { count: createdIOCs.count, bulk: true }, req })
+
     res.status(201).json({
       message: `Successfully created ${createdIOCs.count} IOCs`,
       count: createdIOCs.count
@@ -143,6 +147,8 @@ export const updateIOC = async (
       data: updateData,
     })
 
+    auditService.log({ userId, projectId: ioc.projectId, action: 'UPDATE', entityType: 'IOC', entityId: id, details: updateData as Record<string, unknown>, req })
+
     res.json(ioc)
   } catch (error) {
     next(error)
@@ -160,7 +166,9 @@ export const deleteIOC = async (
 
     await verifyResourceAccess(userId, id, prisma.iOC, 'write')
 
-    await prisma.iOC.delete({ where: { id } })
+    const deleted = await prisma.iOC.delete({ where: { id } })
+
+    auditService.log({ userId, projectId: deleted.projectId, action: 'DELETE', entityType: 'IOC', entityId: id, req })
 
     res.json({ message: 'IOC deleted successfully' })
   } catch (error) {
