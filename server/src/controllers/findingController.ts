@@ -4,6 +4,7 @@ import { prisma } from '../utils/db.js'
 import { AppError } from '../middleware/errorHandler.js'
 import { verifyProjectAccess, verifyResourceAccess, ProjectRequest } from '../middleware/projectAccess.js'
 import { Prisma } from '@prisma/client'
+import { auditService } from '../services/auditService.js'
 
 export const getFindings = async (
   req: ProjectRequest,
@@ -105,6 +106,8 @@ export const createFinding = async (
       },
     })
 
+    auditService.log({ userId: req.user!.id, projectId, action: 'CREATE', entityType: 'Finding', entityId: finding.id, req })
+
     res.status(201).json(finding)
   } catch (error) {
     next(error)
@@ -133,7 +136,7 @@ export const updateFinding = async (
 
     await verifyResourceAccess(userId, id, prisma.finding, 'write')
 
-    const updateData: Prisma.FindingUpdateInput = {}
+    const updateData: Prisma.FindingUncheckedUpdateInput = {}
     if (title) updateData.title = title
     if (description) updateData.description = description
     if (severity) updateData.severity = severity
@@ -158,6 +161,8 @@ export const updateFinding = async (
       },
     })
 
+    auditService.log({ userId, projectId: finding.projectId, action: 'UPDATE', entityType: 'Finding', entityId: id, details: updateData as Record<string, unknown>, req })
+
     res.json(finding)
   } catch (error) {
     next(error)
@@ -175,7 +180,9 @@ export const deleteFinding = async (
 
     await verifyResourceAccess(userId, id, prisma.finding, 'write')
 
-    await prisma.finding.delete({ where: { id } })
+    const deleted = await prisma.finding.delete({ where: { id } })
+
+    auditService.log({ userId, projectId: deleted.projectId, action: 'DELETE', entityType: 'Finding', entityId: id, req })
 
     res.json({ message: 'Finding deleted successfully' })
   } catch (error) {

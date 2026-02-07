@@ -13,6 +13,16 @@ import findingRoutes from './routes/findingRoutes.js'
 import iocRoutes from './routes/iocRoutes.js'
 import ttpRoutes from './routes/ttpRoutes.js'
 import reportRoutes from './routes/reportRoutes.js'
+import auditRoutes from './routes/auditRoutes.js'
+import remediationRoutes from './routes/remediationRoutes.js'
+import attachmentRoutes from './routes/attachmentRoutes.js'
+import findingTemplateRoutes from './routes/findingTemplateRoutes.js'
+import cveRoutes from './routes/cveRoutes.js'
+import analyticsRoutes from './routes/analyticsRoutes.js'
+import complianceRoutes from './routes/complianceRoutes.js'
+import exportRoutes from './routes/exportRoutes.js'
+import shareRoutes from './routes/shareRoutes.js'
+import notificationRoutes from './routes/notificationRoutes.js'
 
 // Load environment variables first
 dotenv.config()
@@ -107,6 +117,16 @@ app.use('/api/findings', apiLimiter, findingRoutes)
 app.use('/api/iocs', apiLimiter, iocRoutes)
 app.use('/api/ttps', aiLimiter, ttpRoutes)
 app.use('/api/reports', aiLimiter, reportRoutes)
+app.use('/api/audit', apiLimiter, auditRoutes)
+app.use('/api/remediation', apiLimiter, remediationRoutes)
+app.use('/api/attachments', apiLimiter, attachmentRoutes)
+app.use('/api/finding-templates', apiLimiter, findingTemplateRoutes)
+app.use('/api/cve', apiLimiter, cveRoutes)
+app.use('/api/analytics', apiLimiter, analyticsRoutes)
+app.use('/api/compliance', apiLimiter, complianceRoutes)
+app.use('/api/export', apiLimiter, exportRoutes)
+app.use('/api/share', apiLimiter, shareRoutes)
+app.use('/api/notifications', apiLimiter, notificationRoutes)
 
 // Error handling
 app.use(errorHandler)

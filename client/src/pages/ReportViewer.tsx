@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import DOMPurify from 'dompurify'
 import reportService from '../services/reportService'
 import Button from '../components/common/Button'
+import ShareModal from '../components/report/ShareModal'
 import { notify } from '../store/notificationStore'
 
 export default function ReportViewer() {
@@ -11,6 +12,8 @@ export default function ReportViewer() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [reportHtml, setReportHtml] = useState<string | null>(null)
+  const [reportId, setReportId] = useState<string | null>(null)
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
 
   useEffect(() => {
     if (projectId) generateReport()
@@ -23,6 +26,7 @@ export default function ReportViewer() {
     try {
       const response = await reportService.generateReport(projectId)
       setReportHtml(response.html)
+      setReportId(response.reportId)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to generate report. Please try again.'
       setError(message)
@@ -101,6 +105,9 @@ export default function ReportViewer() {
             </div>
             <div className="flex items-center gap-3">
               <Button onClick={handlePrint} variant="primary">Print / Save as PDF</Button>
+              {reportId && (
+                <Button onClick={() => setIsShareModalOpen(true)} variant="secondary">Share</Button>
+              )}
               <Button onClick={generateReport} variant="secondary">Regenerate</Button>
             </div>
           </div>
@@ -124,6 +131,14 @@ export default function ReportViewer() {
         }
         .report-container { max-width: 1200px; margin: 0 auto; background: white; min-height: 100vh; }
       `}</style>
+
+      {reportId && (
+        <ShareModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          reportId={reportId}
+        />
+      )}
     </div>
   )
 }

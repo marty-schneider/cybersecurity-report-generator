@@ -175,6 +175,10 @@ export class ReportGenerationService {
         evidence: f.evidence || undefined,
         remediation: f.remediation,
         status: f.status,
+        remediationTargetDate: f.remediationTargetDate || undefined,
+        retestDate: f.retestDate || undefined,
+        verifiedDate: f.verifiedDate || undefined,
+        riskAcceptanceNote: f.riskAcceptanceNote || undefined,
       })),
       iocs: project.iocs.map((ioc: any) => ({
         id: ioc.id,
@@ -305,6 +309,12 @@ export class ReportGenerationService {
   private calculateStatistics(projectData: ProjectData) {
     const findings = projectData.findings
 
+    // Remediation status counts
+    const statusCounts: Record<string, number> = {}
+    for (const f of findings) {
+      statusCounts[f.status] = (statusCounts[f.status] || 0) + 1
+    }
+
     return {
       findings: {
         total: findings.length,
@@ -313,6 +323,10 @@ export class ReportGenerationService {
         medium: findings.filter((f: any) => f.severity === 'MEDIUM').length,
         low: findings.filter((f: any) => f.severity === 'LOW').length,
         info: findings.filter((f: any) => f.severity === 'INFO').length,
+        statusCounts,
+        remediated: findings.filter((f: any) => ['REMEDIATED', 'MITIGATED'].includes(f.status)).length,
+        acceptedRisk: findings.filter((f: any) => f.status === 'ACCEPTED_RISK').length,
+        pending: findings.filter((f: any) => !['REMEDIATED', 'MITIGATED', 'ACCEPTED_RISK'].includes(f.status)).length,
       },
       iocs: {
         total: projectData.iocs.length,

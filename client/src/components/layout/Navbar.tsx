@@ -1,5 +1,6 @@
 import { useAuthStore } from '../../store/authStore'
 import { useNavigate } from 'react-router-dom'
+import NotificationBell from './NotificationBell'
 
 export default function Navbar() {
   const { user, logout } = useAuthStore()
@@ -18,6 +19,7 @@ export default function Navbar() {
             <h1 className="text-2xl font-bold text-primary-600">CyberReport</h1>
           </div>
           <div className="flex items-center gap-4">
+            <NotificationBell />
             <span className="text-sm text-gray-600">{user?.name}</span>
             <button onClick={handleLogout} className="btn btn-secondary text-sm">
               Logout

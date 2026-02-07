@@ -3,9 +3,10 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { projectService } from '../services/projectService'
 import { findingService } from '../services/findingService'
 import { iocService } from '../services/iocService'
+import { attachmentService } from '../services/attachmentService'
 import { ttpService } from '../services/ttpService'
 import { useProjectStore } from '../store/projectStore'
-import { Project, Finding, Severity, IOC } from '../types'
+import { Project, Finding, FindingTemplate, Severity, IOC, Attachment } from '../types'
 import Button from '../components/common/Button'
 import Modal from '../components/common/Modal'
 import LoadingSkeleton from '../components/LoadingSkeleton'
@@ -13,6 +14,15 @@ import IOCImportModal from '../components/ioc/IOCImportModal'
 import IOCFormModal from '../components/ioc/IOCFormModal'
 import IOCList from '../components/ioc/IOCList'
 import ReportPreviewModal from '../components/report/ReportPreviewModal'
+import RemediationPanel from '../components/finding/RemediationPanel'
+import RemediationDashboard from '../components/finding/RemediationDashboard'
+import AttachmentUploader from '../components/finding/AttachmentUploader'
+import AttachmentGallery from '../components/finding/AttachmentGallery'
+import TemplatePickerModal from '../components/finding/TemplatePickerModal'
+import CVEInfoCard from '../components/finding/CVEInfoCard'
+import ComplianceMappingPanel from '../components/compliance/ComplianceMappingPanel'
+import ComplianceDashboard from '../components/compliance/ComplianceDashboard'
+import ExportMenu from '../components/report/ExportMenu'
 import { SeverityBadge, StatusBadge } from '../components/badges'
 import { useIOCForm } from '../hooks/useIOCForm'
 import { notify } from '../store/notificationStore'
@@ -29,6 +39,11 @@ export default function ProjectDetail() {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
   const [editingFinding, setEditingFinding] = useState<Finding | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [expandedFindingId, setExpandedFindingId] = useState<string | null>(null)
+  const [showRemediationDashboard, setShowRemediationDashboard] = useState(false)
+  const [findingAttachments, setFindingAttachments] = useState<Record<string, Attachment[]>>({})
+  const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState(false)
+  const [showComplianceDashboard, setShowComplianceDashboard] = useState(false)
   const [findingFormData, setFindingFormData] = useState({
     title: '',
     description: '',
@@ -141,6 +156,20 @@ export default function ProjectDetail() {
     })
   }
 
+  const handleSelectTemplate = (template: FindingTemplate) => {
+    setEditingFinding(null)
+    setFindingFormData({
+      title: template.title,
+      description: template.description,
+      severity: template.severity,
+      cvssScore: template.cvssScore?.toString() || '',
+      affectedSystems: '',
+      evidence: '',
+      remediation: template.remediation,
+    })
+    setIsFindingModalOpen(true)
+  }
+
   const handleAnalyzeIOCs = async () => {
     if (!id) return
     try {
@@ -193,8 +222,11 @@ export default function ProjectDetail() {
             <Link to={`/projects/${id}/threat-analysis`}>
               <Button>🔍 Threat Analysis</Button>
             </Link>
+            <Link to={`/projects/${id}/audit`}>
+              <Button variant="secondary">📋 Audit Log</Button>
+            </Link>
             <Button onClick={() => setIsReportModalOpen(true)} variant="primary">📄 Generate Report</Button>
-            <Button variant="secondary">⚙️ Settings</Button>
+            {id && <ExportMenu projectId={id} />}
           </div>
         </div>
 
@@ -272,12 +304,51 @@ export default function ProjectDetail() {
         </div>
       )}
 
+      {/* Remediation Dashboard - Only show for non-IR projects */}
+      {!isIncidentResponse && findings.length > 0 && (
+        <div className="card mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">Remediation Tracking</h2>
+            <Button
+              variant="secondary"
+              onClick={() => setShowRemediationDashboard(!showRemediationDashboard)}
+            >
+              {showRemediationDashboard ? 'Hide Dashboard' : 'Show Dashboard'}
+            </Button>
+          </div>
+          {showRemediationDashboard && id && (
+            <RemediationDashboard projectId={id} />
+          )}
+        </div>
+      )}
+
+      {/* Compliance Dashboard */}
+      {!isIncidentResponse && findings.length > 0 && (
+        <div className="card mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">Compliance Mapping</h2>
+            <Button
+              variant="secondary"
+              onClick={() => setShowComplianceDashboard(!showComplianceDashboard)}
+            >
+              {showComplianceDashboard ? 'Hide' : 'Show Coverage'}
+            </Button>
+          </div>
+          {showComplianceDashboard && id && (
+            <ComplianceDashboard projectId={id} />
+          )}
+        </div>
+      )}
+
       {/* Findings Section - Only show for non-IR projects */}
       {!isIncidentResponse && (
         <div className="card">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-900">Findings</h2>
-            <Button onClick={handleAddNewFinding}>+ Add Finding</Button>
+            <div className="flex gap-2">
+              <Button onClick={() => setIsTemplatePickerOpen(true)} variant="secondary">Use Template</Button>
+              <Button onClick={handleAddNewFinding}>+ Add Finding</Button>
+            </div>
           </div>
 
           {findings.length === 0 ? (
@@ -296,6 +367,21 @@ export default function ProjectDetail() {
                         <span className="text-sm text-gray-600">CVSS: {finding.cvssScore}</span>
                       )}
                       <StatusBadge status={finding.status} />
+                      <button
+                        onClick={() => {
+                          const newId = expandedFindingId === finding.id ? null : finding.id
+                          setExpandedFindingId(newId)
+                          if (newId && !findingAttachments[finding.id]) {
+                            attachmentService.list(finding.id).then(atts => {
+                              setFindingAttachments(prev => ({ ...prev, [finding.id]: atts }))
+                            }).catch(() => {})
+                          }
+                        }}
+                        className="text-indigo-600 hover:text-indigo-800 text-xs px-2 py-1"
+                        title="Remediation & Evidence"
+                      >
+                        {expandedFindingId === finding.id ? '▼ Details' : '▶ Details'}
+                      </button>
                       <button onClick={() => handleEditFinding(finding)} className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1" title="Edit Finding">✏️</button>
                       <button onClick={() => handleDeleteFinding(finding)} className="text-red-600 hover:text-red-800 text-xs px-2 py-1" title="Delete Finding">🗑️</button>
                     </div>
@@ -306,6 +392,43 @@ export default function ProjectDetail() {
                       {finding.affectedSystems.map((system, idx) => (
                         <span key={idx} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">{system}</span>
                       ))}
+                    </div>
+                  )}
+                  {expandedFindingId === finding.id && (
+                    <div className="mt-4 pt-4 border-t border-gray-200 space-y-6">
+                      <RemediationPanel
+                        finding={finding}
+                        onUpdate={(updated) => setFindings(findings.map(f => f.id === updated.id ? updated : f))}
+                      />
+                      {finding.cveData && (
+                        <div className="border-t border-gray-200 pt-4">
+                          <h4 className="text-sm font-medium text-gray-700 mb-3">CVE Information</h4>
+                          <CVEInfoCard cveData={finding.cveData} />
+                        </div>
+                      )}
+                      <div className="border-t border-gray-200 pt-4">
+                        <h4 className="text-sm font-medium text-gray-700 mb-3">Evidence & Attachments</h4>
+                        <AttachmentUploader
+                          findingId={finding.id}
+                          onUpload={(att) => setFindingAttachments(prev => ({
+                            ...prev,
+                            [finding.id]: [att, ...(prev[finding.id] || [])],
+                          }))}
+                        />
+                        <div className="mt-3">
+                          <AttachmentGallery
+                            findingId={finding.id}
+                            attachments={findingAttachments[finding.id] || []}
+                            onDelete={(attId) => setFindingAttachments(prev => ({
+                              ...prev,
+                              [finding.id]: (prev[finding.id] || []).filter(a => a.id !== attId),
+                            }))}
+                          />
+                        </div>
+                      </div>
+                      <div className="border-t border-gray-200 pt-4">
+                        <ComplianceMappingPanel findingId={finding.id} />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -429,6 +552,12 @@ export default function ProjectDetail() {
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
         project={currentProject}
+      />
+
+      <TemplatePickerModal
+        isOpen={isTemplatePickerOpen}
+        onClose={() => setIsTemplatePickerOpen(false)}
+        onSelect={handleSelectTemplate}
       />
     </div>
   )

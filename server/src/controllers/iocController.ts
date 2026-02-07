@@ -3,7 +3,8 @@ import { AuthRequest } from '../middleware/auth.js'
 import { prisma } from '../utils/db.js'
 import { AppError } from '../middleware/errorHandler.js'
 import { verifyProjectAccess, verifyResourceAccess, ProjectRequest } from '../middleware/projectAccess.js'
-import { Prisma } from '@prisma/client'
+import { Prisma, IOCType } from '@prisma/client'
+import { auditService } from '../services/auditService.js'
 
 export const getIOCs = async (
   req: ProjectRequest,
@@ -70,6 +71,8 @@ export const createIOC = async (
       },
     })
 
+    auditService.log({ userId: req.user!.id, projectId, action: 'CREATE', entityType: 'IOC', entityId: ioc.id, req })
+
     res.status(201).json(ioc)
   } catch (error) {
     next(error)
@@ -100,13 +103,15 @@ export const bulkCreateIOCs = async (
     const createdIOCs = await prisma.iOC.createMany({
       data: iocs.map((ioc: { type: string; value: string; timestamp: string; context?: string; source?: string }) => ({
         projectId,
-        type: ioc.type,
+        type: ioc.type as IOCType,
         value: ioc.value,
         timestamp: new Date(ioc.timestamp),
         context: ioc.context,
         source: ioc.source,
       })),
     })
+
+    auditService.log({ userId: req.user!.id, projectId, action: 'CREATE', entityType: 'IOC', details: { count: createdIOCs.count, bulk: true }, req })
 
     res.status(201).json({
       message: `Successfully created ${createdIOCs.count} IOCs`,
@@ -142,6 +147,8 @@ export const updateIOC = async (
       data: updateData,
     })
 
+    auditService.log({ userId, projectId: ioc.projectId, action: 'UPDATE', entityType: 'IOC', entityId: id, details: updateData as Record<string, unknown>, req })
+
     res.json(ioc)
   } catch (error) {
     next(error)
@@ -159,7 +166,9 @@ export const deleteIOC = async (
 
     await verifyResourceAccess(userId, id, prisma.iOC, 'write')
 
-    await prisma.iOC.delete({ where: { id } })
+    const deleted = await prisma.iOC.delete({ where: { id } })
+
+    auditService.log({ userId, projectId: deleted.projectId, action: 'DELETE', entityType: 'IOC', entityId: id, req })
 
     res.json({ message: 'IOC deleted successfully' })
   } catch (error) {

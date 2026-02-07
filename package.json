@@ -13,7 +13,10 @@
     "install:all": "npm install && cd client && npm install && cd ../server && npm install",
     "db:migrate": "cd server && npx prisma migrate dev",
     "db:generate": "cd server && npx prisma generate",
-    "db:seed": "cd server && npx prisma db seed"
+    "db:seed": "cd server && npx prisma db seed",
+    "test": "npm run test:server && npm run test:client",
+    "test:server": "cd server && npm test",
+    "test:client": "cd client && npm test"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
